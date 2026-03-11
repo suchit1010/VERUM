@@ -1,0 +1,12 @@
+version: "3.8"
+
+# Root-level compose — delegates to backend/docker-compose.yml
+# Usage: docker compose up --build
+#
+# Required env vars (set in backend/.env or pass via shell):
+#   AUTHORITY_KEYPAIR — base58-encoded Solana private key
+#   SSS_PROGRAM_ID    — deployed stablecoin program ID
+#   SSS_HOOK_PROGRAM_ID — deployed transfer hook program ID
+
+include:
+  - path: ./backend/docker-compose.yml

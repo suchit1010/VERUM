@@ -1,0 +1,33 @@
+# Anchor
+.anchor
+target
+
+# Node
+node_modules
+dist
+
+# Solana
+test-ledger
+
+# IDE
+.idea
+.vscode
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+
+# Build
+*.so
+
+llvm/
+
+platform-tools-linux-x86_64.tar.bz2
+
+mocha_error.log
+
+mocha_error2.txt

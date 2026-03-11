@@ -1,0 +1,148 @@
+version: "3.8"
+
+services:
+  # ─── Core Services (All Presets) ────────────────────────────────
+
+  mint-burn:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: ["node", "dist/services/mint-burn/index.js"]
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      - SOLANA_WS_URL=${SOLANA_WS_URL:-wss://api.devnet.solana.com}
+      - SSS_PROGRAM_ID=${SSS_PROGRAM_ID:-HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet}
+      - SSS_HOOK_PROGRAM_ID=${SSS_HOOK_PROGRAM_ID:-6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN}
+      - AUTHORITY_KEYPAIR=${AUTHORITY_KEYPAIR}
+      - DATABASE_URL=postgres://sss:sss_password@postgres:5432/sss_stablecoin
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  indexer:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: ["node", "dist/services/indexer/index.js"]
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      - SOLANA_WS_URL=${SOLANA_WS_URL:-wss://api.devnet.solana.com}
+      - SSS_PROGRAM_ID=${SSS_PROGRAM_ID:-HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet}
+      - AUTHORITY_KEYPAIR=${AUTHORITY_KEYPAIR}
+      - DATABASE_URL=postgres://sss:sss_password@postgres:5432/sss_stablecoin
+      - REDIS_URL=redis://redis:6379
+      - PORT=3002
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── SSS-2 Compliance Services ─────────────────────────────────
+
+  compliance:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: ["node", "dist/services/compliance/index.js"]
+    environment:
+      - NODE_ENV=production
+      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      - SSS_PROGRAM_ID=${SSS_PROGRAM_ID:-HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet}
+      - AUTHORITY_KEYPAIR=${AUTHORITY_KEYPAIR}
+      - DATABASE_URL=postgres://sss:sss_password@postgres:5432/sss_stablecoin
+      - REDIS_URL=redis://redis:6379
+      - PORT=3003
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  webhook:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    command: ["node", "dist/services/webhook/index.js"]
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://sss:sss_password@postgres:5432/sss_stablecoin
+      - REDIS_URL=redis://redis:6379
+      - PORT=3004
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── Infrastructure ────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=sss
+      - POSTGRES_PASSWORD=sss_password
+      - POSTGRES_DB=sss_stablecoin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sss -d sss_stablecoin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
