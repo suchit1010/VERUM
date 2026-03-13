@@ -1,6 +1,6 @@
-import { expect } from "chai";
-import { spawnSync } from "child_process";
-import path from "path";
+const { expect } = require("chai");
+const { spawnSync } = require("child_process");
+const path = require("path");
 
 describe("CLI Smoke Tests", () => {
   it("prints help successfully from built binary", () => {
