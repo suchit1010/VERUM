@@ -1,4 +1,8 @@
-# OS / Editor
+# -----------------------------------------------------------------------------
+# Solana Stablecoin Standard - Root .gitignore
+# -----------------------------------------------------------------------------
+
+# OS / editor
 .DS_Store
 Thumbs.db
 Desktop.ini
@@ -8,7 +12,7 @@ Desktop.ini
 *.swo
 *~
 
-# Logs
+# Logs / diagnostics
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -17,7 +21,7 @@ pnpm-debug.log*
 mocha_error.log
 mocha_error2.txt
 
-# Node / JS / TS
+# Node / JS / TS artifacts
 node_modules/
 **/node_modules/
 dist/
@@ -26,6 +30,10 @@ build/
 **/build/
 coverage/
 **/coverage/
+.next/
+**/.next/
+.turbo/
+.cache/
 *.tsbuildinfo
 
 # Rust / Anchor / Solana artifacts
@@ -57,7 +65,7 @@ keys/
 secrets/
 .config/solana/
 
-# Temp
+# Temporary files
 tmp/
 temp/
 *.tmp
