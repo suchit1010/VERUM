@@ -20,6 +20,8 @@ pub struct InitializeParams {
     pub enable_transfer_hook: bool,
     /// Whether new accounts start frozen
     pub default_account_frozen: bool,
+    /// Enable Confidential Transfer extension (SSS-3 POC)
+    pub enable_confidential_transfer: bool,
 }
 
 #[derive(Accounts)]
@@ -114,6 +116,11 @@ pub fn handler(ctx: Context<Initialize>, params: InitializeParams) -> Result<()>
         extension_types.push(spl_token_2022::extension::ExtensionType::DefaultAccountState);
     }
 
+    if params.enable_confidential_transfer {
+        // SSS-3: ConfidentialTransferMint enables ZK-proof-verified transfers
+        extension_types.push(spl_token_2022::extension::ExtensionType::ConfidentialTransferMint);
+    }
+
     let space = spl_token_2022::extension::ExtensionType::try_calculate_account_len::<
         spl_token_2022::state::Mint,
     >(&extension_types)?;
@@ -171,7 +178,7 @@ pub fn handler(ctx: Context<Initialize>, params: InitializeParams) -> Result<()>
                 &token_program.key(),
                 &mint_account.key(),
                 Some(ctx.accounts.authority.key()),
-                Some(crate::ID), // Hook program ID — in production, use transfer hook program ID
+                Some(std::str::FromStr::from_str("6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN").unwrap()), // Hook program ID
             )?,
             &[
                 mint_account.to_account_info(),
@@ -185,6 +192,27 @@ pub fn handler(ctx: Context<Initialize>, params: InitializeParams) -> Result<()>
                 &token_program.key(),
                 &mint_account.key(),
                 &spl_token_2022::state::AccountState::Frozen,
+            )?,
+            &[
+                mint_account.to_account_info(),
+            ],
+        )?;
+    }
+
+    // SSS-3: Initialize ConfidentialTransferMint extension.
+    // auto_approve_new_accounts = true: all accounts can use confidential transfers
+    // without explicit per-account approval (simplified compliance model).
+    // auditor_elgamal_pubkey = None: no auditor for this POC.
+    // Full auditor key support requires client-side ElGamal key generation.
+    if params.enable_confidential_transfer {
+        use spl_token_2022::extension::confidential_transfer::instruction as ct_ix;
+        anchor_lang::solana_program::program::invoke(
+            &ct_ix::initialize_mint(
+                &token_program.key(),
+                &mint_account.key(),
+                Some(ctx.accounts.authority.key()),
+                true,  // auto_approve_new_accounts
+                None,  // no auditor key (POC)
             )?,
             &[
                 mint_account.to_account_info(),
@@ -217,6 +245,7 @@ pub fn handler(ctx: Context<Initialize>, params: InitializeParams) -> Result<()>
     config.enable_permanent_delegate = params.enable_permanent_delegate;
     config.enable_transfer_hook = params.enable_transfer_hook;
     config.default_account_frozen = params.default_account_frozen;
+    config.enable_confidential_transfer = params.enable_confidential_transfer;
     config.bump = ctx.bumps.config;
     config.created_at = clock.unix_timestamp;
 
@@ -247,7 +276,9 @@ pub fn handler(ctx: Context<Initialize>, params: InitializeParams) -> Result<()>
     pause_state.bump = ctx.bumps.pause_state;
 
     // ─── Emit Event ──────────────────────────────────────────────
-    let preset = if params.enable_permanent_delegate && params.enable_transfer_hook {
+    let preset = if params.enable_confidential_transfer {
+        "SSS-3"
+    } else if params.enable_permanent_delegate && params.enable_transfer_hook {
         "SSS-2"
     } else {
         "SSS-1"

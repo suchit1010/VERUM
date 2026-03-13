@@ -38,6 +38,10 @@ pub struct StablecoinConfig {
     /// Whether new token accounts start frozen by default (SSS-2)
     pub default_account_frozen: bool,
 
+    // ─── SSS-3 Feature Flags ─────────────────────────────────────
+    /// Whether Confidential Transfer extension is enabled (SSS-3)
+    pub enable_confidential_transfer: bool,
+
     /// PDA bump for efficient re-derivation
     pub bump: u8,
 
@@ -49,5 +53,10 @@ impl StablecoinConfig {
     /// Returns true if this is an SSS-2 compliant stablecoin
     pub fn is_compliant(&self) -> bool {
         self.enable_permanent_delegate || self.enable_transfer_hook
+    }
+
+    /// Returns true if this is an SSS-3 confidential stablecoin
+    pub fn is_confidential(&self) -> bool {
+        self.enable_confidential_transfer
     }
 }

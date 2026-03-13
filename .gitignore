@@ -1,33 +1,71 @@
-# Anchor
-.anchor
-target
+# -----------------------------------------------------------------------------
+# Solana Stablecoin Standard - Root .gitignore
+# -----------------------------------------------------------------------------
 
-# Node
-node_modules
-dist
-
-# Solana
-test-ledger
-
-# IDE
-.idea
-.vscode
-
-# OS
+# OS / editor
 .DS_Store
 Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-# Environment
-.env
-.env.local
+# Logs / diagnostics
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+mocha_error.log
+mocha_error2.txt
 
-# Build
+# Node / JS / TS artifacts
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+.next/
+**/.next/
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Rust / Anchor / Solana artifacts
+target/
+**/target/
+.anchor/
+test-ledger/
+ledger/
 *.so
-
+rust/
 llvm/
-
 platform-tools-linux-x86_64.tar.bz2
 
-mocha_error.log
+# Fuzz / Trident outputs
+trident-tests/hfuzz_workspace/
+trident-tests/hfuzz_target/
+hfuzz_workspace/
+hfuzz_target/
+*.honggfuzz.cov
 
-mocha_error2.txt
+# Env / secrets / keys
+.env
+.env.*
+!.env.example
+*.keypair
+id.json
+wallet.json
+keys/
+secrets/
+.config/solana/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

@@ -59,32 +59,48 @@ pub mod sss_transfer_hook {
     pub fn initialize_extra_account_meta_list(
         ctx: Context<InitializeExtraAccountMetaList>,
     ) -> Result<()> {
-        let mint_key = ctx.accounts.mint.key();
-
         // Define the extra accounts the hook needs:
         // 1. Source blacklist PDA: ["blacklist", mint, source_owner]
         // 2. Destination blacklist PDA: ["blacklist", mint, dest_owner]
+        let sss_program_id = std::str::FromStr::from_str("HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet").unwrap();
+
         let extra_metas = vec![
-            // Source owner's blacklist entry
-            ExtraAccountMeta::new_with_seeds(
+            // index 5: The sss-stablecoin program ID
+            ExtraAccountMeta::new_with_pubkey(
+                &sss_program_id,
+                false,
+                false,
+            )?,
+            // index 6: Source owner's blacklist entry
+            ExtraAccountMeta::new_external_pda_with_seeds(
+                5, // program id index
                 &[
                     Seed::Literal {
                         bytes: SEED_BLACKLIST.to_vec(),
                     },
                     Seed::AccountKey { index: 1 }, // mint
-                    Seed::AccountKey { index: 3 }, // source authority/owner
+                    Seed::AccountData { 
+                        account_index: 0, // source token account
+                        data_index: 32, // owner pubkey offset
+                        length: 32, 
+                    },
                 ],
                 false, // is_signer
                 false, // is_writable
             )?,
-            // Destination owner's blacklist entry
-            ExtraAccountMeta::new_with_seeds(
+            // index 7: Destination owner's blacklist entry
+            ExtraAccountMeta::new_external_pda_with_seeds(
+                5, // program id index
                 &[
                     Seed::Literal {
                         bytes: SEED_BLACKLIST.to_vec(),
                     },
                     Seed::AccountKey { index: 1 }, // mint
-                    Seed::AccountKey { index: 2 }, // destination
+                    Seed::AccountData { 
+                        account_index: 2, // destination token account
+                        data_index: 32, // owner pubkey offset
+                        length: 32, 
+                    },
                 ],
                 false,
                 false,
@@ -94,6 +110,32 @@ pub mod sss_transfer_hook {
         // Allocate space for the ExtraAccountMetaList
         let account_size = ExtraAccountMetaList::size_of(
             extra_metas.len(),
+        )?;
+
+        // Calculate minimum rent
+        let rent = Rent::get()?;
+        let lamports = rent.minimum_balance(account_size);
+
+        let mint_key = ctx.accounts.mint.key();
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            SEED_EXTRA_ACCOUNT_METAS,
+            mint_key.as_ref(),
+            &[ctx.bumps.extra_account_meta_list],
+        ]];
+
+        // Create the account via CPI to System Program
+        anchor_lang::system_program::create_account(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                anchor_lang::system_program::CreateAccount {
+                    from: ctx.accounts.payer.to_account_info(),
+                    to: ctx.accounts.extra_account_meta_list.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            lamports,
+            account_size as u64,
+            ctx.program_id,
         )?;
 
         // Initialize
@@ -152,6 +194,13 @@ pub struct TransferHook<'info> {
         bump,
     )]
     pub extra_account_meta_list: UncheckedAccount<'info>,
+
+    /// The sss-stablecoin program ID
+    /// CHECK: We added this to `initialize_extra_account_meta_list` as index 5
+    /// so that we could use it to derive external PDAs for the blacklist.
+    /// Token-2022 runtime passes accounts in the exact order they are added
+    /// to the ExtraAccountMetaList, so we MUST expect it here before the blacklist PDAs.
+    pub sss_program: UncheckedAccount<'info>,
 
     /// Source owner's blacklist PDA (may not exist)
     /// CHECK: We only check if it has data (exists = blacklisted)

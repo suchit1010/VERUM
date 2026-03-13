@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node src/index.ts",
+    "tui": "ts-node tui.ts",
     "test": "mocha --require ts-node/register 'tests/**/*.ts' --timeout 30000"
   },
   "dependencies": {
@@ -20,10 +21,13 @@
     "commander": "^12.1.0",
     "chalk": "^4.1.2",
     "ora": "^5.4.1",
-    "toml": "^3.0.0"
+    "toml": "^3.0.0",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.11",
+    "@types/blessed": "^0.1.22",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   }

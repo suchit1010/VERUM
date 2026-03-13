@@ -2,7 +2,11 @@
 members = [
     "programs/sss-stablecoin",
     "programs/sss-transfer-hook",
+    "programs/sss-oracle",
     "modules/sss-common",
+]
+exclude = [
+    "trident-tests",
 ]
 resolver = "2"
 

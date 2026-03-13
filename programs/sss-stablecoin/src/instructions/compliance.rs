@@ -187,7 +187,7 @@ pub struct Seize<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
-pub fn seize_handler(ctx: Context<Seize>, amount: u64) -> Result<()> {
+pub fn seize_handler<'info>(ctx: Context<'_, '_, '_, 'info, Seize<'info>>, amount: u64) -> Result<()> {
     require!(amount > 0, SssError::InvalidAmount);
 
     // Feature gate: must have permanent delegate enabled
@@ -212,19 +212,42 @@ pub fn seize_handler(ctx: Context<Seize>, amount: u64) -> Result<()> {
         &[config_bump],
     ]];
 
-    transfer_checked(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            TransferChecked {
-                from: ctx.accounts.from_account.to_account_info(),
-                to: ctx.accounts.to_account.to_account_info(),
-                authority: ctx.accounts.config.to_account_info(),
-                mint: ctx.accounts.mint.to_account_info(),
-            },
-            signer_seeds,
-        ),
+    // Construct the Token-2022 transfer_checked instruction manually
+    // because Anchor's CPI helper does NOT add remaining_accounts to the instruction's AccountMetas
+    let mut transfer_ix = spl_token_2022::instruction::transfer_checked(
+        ctx.accounts.token_program.key,
+        &ctx.accounts.from_account.key(),
+        &ctx.accounts.mint.key(),
+        &ctx.accounts.to_account.key(),
+        &ctx.accounts.config.key(), // The permanent delegate is the authority
+        &[],
         amount,
         ctx.accounts.mint.decimals,
+    )?;
+
+    // Append the remaining accounts to the instruction's AccountMetas
+    for acc in ctx.remaining_accounts {
+        transfer_ix.accounts.push(anchor_lang::solana_program::instruction::AccountMeta {
+            pubkey: *acc.key,
+            is_signer: acc.is_signer,
+            is_writable: acc.is_writable,
+        });
+    }
+
+    // Build the array of AccountInfos for invoke_signed
+    let mut account_infos = vec![
+        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.from_account.to_account_info(),
+        ctx.accounts.mint.to_account_info(),
+        ctx.accounts.to_account.to_account_info(),
+        ctx.accounts.config.to_account_info(),
+    ];
+    account_infos.extend_from_slice(ctx.remaining_accounts);
+
+    anchor_lang::solana_program::program::invoke_signed(
+        &transfer_ix,
+        &account_infos,
+        signer_seeds,
     )?;
 
     emit!(TokensSeized {

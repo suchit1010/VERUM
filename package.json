@@ -30,5 +30,8 @@
     "prettier": "^3.3.3",
     "ts-mocha": "^11.1.0",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@solana-program/program-metadata": "^0.5.1"
   }
 }

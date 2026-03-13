@@ -89,7 +89,7 @@ pub mod sss_stablecoin {
     }
 
     /// Seize tokens from a frozen/blacklisted account via permanent delegate. SSS-2 only.
-    pub fn seize(ctx: Context<Seize>, amount: u64) -> Result<()> {
+    pub fn seize<'info>(ctx: Context<'_, '_, '_, 'info, Seize<'info>>, amount: u64) -> Result<()> {
         instructions::compliance::seize_handler(ctx, amount)
     }
 }

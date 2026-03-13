@@ -51,6 +51,9 @@ pub enum SssError {
     #[msg("Permanent delegate is not enabled on this stablecoin")]
     PermanentDelegateNotEnabled,
 
+    #[msg("Confidential Transfer is not enabled on this stablecoin (SSS-3). Initialize with enable_confidential_transfer=true.")]
+    ConfidentialTransferNotEnabled,
+
     // ─── Validation ──────────────────────────────────────────────
     #[msg("Invalid amount: must be greater than zero")]
     InvalidAmount,

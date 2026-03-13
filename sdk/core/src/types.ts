@@ -31,6 +31,7 @@ export interface StablecoinConfig {
   enablePermanentDelegate: boolean;
   enableTransferHook: boolean;
   defaultAccountFrozen: boolean;
+  enableConfidentialTransfer: boolean;
   bump: number;
   createdAt: number;
 }
@@ -82,6 +83,7 @@ export interface InitializeParams {
   enablePermanentDelegate: boolean;
   enableTransferHook: boolean;
   defaultAccountFrozen: boolean;
+  enableConfidentialTransfer: boolean;
 }
 
 export enum RoleType {

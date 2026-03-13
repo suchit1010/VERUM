@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import { spawn } from "child_process";
+import path from "path";
 import { registerInitCommand } from "./commands/init";
 import { registerMintCommand } from "./commands/mint";
 import { registerBurnCommand } from "./commands/burn";
@@ -36,5 +38,22 @@ registerStatusCommand(program);
 registerComplianceCommand(program);
 registerMintersCommand(program);
 registerAuditCommand(program);
+
+// TUI command
+program
+  .command("tui <mintAddress> [cluster]")
+  .description("Launch interactive terminal dashboard (admin mode)")
+  .option("-u, --url <url>", "Custom RPC URL")
+  .action((mintAddress: string, cluster: string = "devnet", opts: any) => {
+    const tuiPath = path.join(__dirname, "../tui.ts");
+    const child = spawn("npx", ["ts-node", tuiPath, mintAddress, cluster], {
+      stdio: "inherit",
+      cwd: path.join(__dirname, ".."),
+    });
+
+    child.on("exit", (code) => {
+      process.exit(code || 0);
+    });
+  });
 
 program.parse(process.argv);

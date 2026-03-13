@@ -30,6 +30,7 @@ import {
   MinterQuota,
 } from "./types";
 import { parseSssError } from "./errors";
+import SssStablecoinIdl from "./idl.json";
 
 /**
  * SolanaStablecoin — Main SDK entry point.
@@ -78,7 +79,7 @@ export class SolanaStablecoin {
     programId: PublicKey = SSS_STABLECOIN_PROGRAM_ID
   ): Promise<{ stablecoin: SolanaStablecoin; mint: Keypair; signature: TransactionSignature }> {
     const program = new Program(
-      await Program.fetchIdl(programId, provider)!,
+      SssStablecoinIdl as anchor.Idl,
       provider
     );
 
@@ -127,7 +128,7 @@ export class SolanaStablecoin {
     programId: PublicKey = SSS_STABLECOIN_PROGRAM_ID
   ): Promise<SolanaStablecoin> {
     const program = new Program(
-      await Program.fetchIdl(programId, provider)!,
+      SssStablecoinIdl as anchor.Idl,
       provider
     );
 
@@ -146,6 +147,7 @@ export class SolanaStablecoin {
       enablePermanentDelegate: configAccount.enablePermanentDelegate,
       enableTransferHook: configAccount.enableTransferHook,
       defaultAccountFrozen: configAccount.defaultAccountFrozen,
+      enableConfidentialTransfer: configAccount.enableConfidentialTransfer,
       bump: configAccount.bump,
       createdAt: configAccount.createdAt.toNumber(),
     };
@@ -445,6 +447,7 @@ export class SolanaStablecoin {
       enablePermanentDelegate: account.enablePermanentDelegate,
       enableTransferHook: account.enableTransferHook,
       defaultAccountFrozen: account.defaultAccountFrozen,
+      enableConfidentialTransfer: account.enableConfidentialTransfer,
       bump: account.bump,
       createdAt: account.createdAt.toNumber(),
     };

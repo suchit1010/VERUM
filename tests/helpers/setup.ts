@@ -47,6 +47,7 @@ export async function createTestStablecoin(
     enablePermanentDelegate: isSss2,
     enableTransferHook: isSss2,
     defaultAccountFrozen: false,
+    enableConfidentialTransfer: false,
   };
 
   await program.methods
