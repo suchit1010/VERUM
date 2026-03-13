@@ -30,6 +30,7 @@ import {
   MinterQuota,
 } from "./types";
 import { parseSssError } from "./errors";
+import { StablecoinInstructionBuilder } from "./instructions";
 import SssStablecoinIdl from "./idl.json";
 
 /**
@@ -57,6 +58,7 @@ import SssStablecoinIdl from "./idl.json";
 export class SolanaStablecoin {
   public readonly accounts: SssAccounts;
   public readonly compliance: ComplianceModule;
+  public readonly instructionBuilder: StablecoinInstructionBuilder;
 
   private constructor(
     public readonly connection: Connection,
@@ -67,6 +69,7 @@ export class SolanaStablecoin {
   ) {
     this.accounts = new SssAccounts(this.programId, SSS_TRANSFER_HOOK_PROGRAM_ID);
     this.compliance = new ComplianceModule(this);
+    this.instructionBuilder = new StablecoinInstructionBuilder(this);
   }
 
   /**

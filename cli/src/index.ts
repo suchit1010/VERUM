@@ -1,5 +1,22 @@
 #!/usr/bin/env node
 
+// Suppress bigint bindings warning for a cleaner CLI UX
+const originalEmitWarning = process.emitWarning;
+// @ts-ignore
+process.emitWarning = function(warning: any, ...args: any[]) {
+  if (warning && typeof warning === 'string' && warning.includes("Failed to load bindings")) {
+    return;
+  }
+  return originalEmitWarning.call(this, warning, ...args);
+};
+const originalConsoleError = console.error;
+console.error = function(...args: any[]) {
+  if (args[0] && typeof args[0] === 'string' && args[0].includes("bigint: Failed to load bindings")) {
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
+
 import { Command } from "commander";
 import { spawn } from "child_process";
 import path from "path";

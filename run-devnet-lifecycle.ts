@@ -12,6 +12,16 @@
  *   - npm install in the repo root
  */
 import * as anchor from "@coral-xyz/anchor";
+
+// Suppress bigint-buffer warning noise
+const originalConsoleError = console.error;
+console.error = function(...args: any[]) {
+  if (args[0] && typeof args[0] === 'string' && args[0].includes("bigint: Failed to load bindings")) {
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
+
 import { SolanaStablecoin } from "./sdk/core/src/stablecoin";
 import {
   TOKEN_2022_PROGRAM_ID,
