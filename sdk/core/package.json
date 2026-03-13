@@ -7,8 +7,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "mocha --require ts-node/register 'tests/**/*.ts' --timeout 60000",
-    "lint": "eslint src/ --ext .ts"
+    "test": "tsc -p tsconfig.test.json && mocha \"dist-test/tests/**/*.js\" --timeout 60000",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",

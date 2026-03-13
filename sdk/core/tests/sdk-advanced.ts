@@ -23,7 +23,16 @@ import {
 import { expect } from "chai";
 import { SolanaStablecoin } from "../src/stablecoin";
 
-describe("SSS SDK Advanced Tests", () => {
+const HAS_ANCHOR_ENV = !!process.env.ANCHOR_PROVIDER_URL && !!process.env.ANCHOR_WALLET;
+
+describe("SSS SDK Advanced Tests", function () {
+  if (!HAS_ANCHOR_ENV) {
+    before(function () {
+      this.skip();
+    });
+    return;
+  }
+
   const provider = AnchorProvider.env();
   anchor.setProvider(provider);
 
