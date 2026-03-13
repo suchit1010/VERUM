@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_2022;
-use anchor_spl::token_interface::{Mint, TokenInterface};
+use anchor_spl::token_interface::TokenInterface;
 use sss_common::seeds::*;
 
 use crate::errors::SssError;
@@ -25,7 +24,6 @@ pub struct InitializeParams {
 }
 
 #[derive(Accounts)]
-#[instruction(params: InitializeParams)]
 pub struct Initialize<'info> {
     /// The authority initializing the stablecoin
     #[account(mut)]
@@ -72,9 +70,6 @@ pub struct Initialize<'info> {
 
     /// System program
     pub system_program: Program<'info, System>,
-
-    /// Rent sysvar
-    pub rent: Sysvar<'info, Rent>,
 }
 
 pub fn handler(ctx: Context<Initialize>, params: InitializeParams) -> Result<()> {
@@ -126,7 +121,7 @@ pub fn handler(ctx: Context<Initialize>, params: InitializeParams) -> Result<()>
     >(&extension_types)?;
 
     // Create the mint account
-    let rent = &ctx.accounts.rent;
+    let rent = Rent::get()?;
     let lamports = rent.minimum_balance(space);
 
     anchor_lang::solana_program::program::invoke(

@@ -9,7 +9,6 @@ import { useSSS } from '@/hooks/useSSS';
 import { toast } from 'react-hot-toast';
 import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, createAssociatedTokenAccountIdempotentInstruction, createTransferCheckedInstruction, getAccount } from '@solana/spl-token';
 import { SssAccounts, SSS_STABLECOIN_PROGRAM_ID, SSS_TRANSFER_HOOK_PROGRAM_ID } from '@stbr/sss-token';
-// @ts-ignore
 import { Loader2, Coins, ArrowRightLeft, ShieldAlert } from 'lucide-react';
 
 const DEVNET_MINTS = [
@@ -41,6 +40,12 @@ const parseTransferLogs = (logs: string[] | null | undefined): string => {
 
   const lastProgramLog = logs?.filter((line) => line.includes('Program log:')).slice(-1)[0];
   return lastProgramLog?.replace('Program log: ', '') ?? 'Transfer simulation failed. See console logs.';
+};
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Unknown error';
 };
 
 export default function Home() {
@@ -109,11 +114,12 @@ export default function Home() {
       fetchBalance();
       setMintAmount('');
       setMintRecipient('');
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = getErrorMessage(e);
       if (tid) {
-        toast.error('Mint failed: ' + e.message, { id: tid, duration: 6000 });
+        toast.error('Mint failed: ' + message, { id: tid, duration: 6000 });
       } else {
-        toast.error('Mint failed: ' + e.message, { duration: 6000 });
+        toast.error('Mint failed: ' + message, { duration: 6000 });
       }
     } finally {
       setIsMinting(false);
@@ -147,11 +153,12 @@ export default function Home() {
       toast.success(<div>Burn successful!<br/><a href={`https://solscan.io/tx/${txId}?cluster=devnet`} target="_blank" rel="noreferrer" className="underline text-blue-400">View on Solscan</a></div>, { id: tid });
       fetchBalance();
       setBurnAmount('');
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const message = getErrorMessage(e);
       if (tid) {
-        toast.error('Burn failed: ' + e.message, { id: tid });
+        toast.error('Burn failed: ' + message, { id: tid });
       } else {
-        toast.error('Burn failed: ' + e.message);
+        toast.error('Burn failed: ' + message);
       }
     } finally {
       setIsBurning(false);
@@ -324,13 +331,18 @@ export default function Home() {
       fetchBalance();
       setTransferAmount('');
       setTransferRecipient('');
-    } catch (e: any) {
-      let details = e?.message ?? e?.error?.message ?? e?.cause?.message ?? 'Unknown transfer error';
+    } catch (e: unknown) {
+      const errorWithCause = e as { error?: unknown; cause?: unknown };
+      let details = getErrorMessage(e);
 
-      const nestedError = (e?.error ?? e?.cause) as unknown;
+      const nestedErrorForMessage = (errorWithCause.error ?? errorWithCause.cause) as unknown;
+      if (details === 'Unknown error' && nestedErrorForMessage) {
+        details = getErrorMessage(nestedErrorForMessage);
+      }
+
       const sendError = e instanceof SendTransactionError
         ? e
-        : (nestedError instanceof SendTransactionError ? nestedError : null);
+        : (nestedErrorForMessage instanceof SendTransactionError ? nestedErrorForMessage : null);
 
       if (sendError) {
         try {
@@ -365,13 +377,13 @@ export default function Home() {
     <div className="max-w-4xl mx-auto p-4 md:p-8">
       <header className="flex flex-col md:flex-row justify-between items-center bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 flex items-center gap-3">
+          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-emerald-400 flex items-center gap-3">
             <Coins className="w-8 h-8 text-blue-400" />
             SSS Dashboard
           </h1>
           <p className="text-slate-400 mt-2">Manage and track your Solana Stablecoins</p>
         </div>
-        <WalletMultiButton className="!bg-blue-600 hover:!bg-blue-700 !transition-colors rounded-xl" />
+        <WalletMultiButton className="bg-blue-600! hover:bg-blue-700! transition-colors! rounded-xl" />
       </header>
 
       {publicKey ? (
@@ -420,7 +432,7 @@ export default function Home() {
           {activeMint && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              <div className="col-span-1 md:col-span-2 flex bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-6 rounded-2xl shadow-lg items-center justify-between">
+              <div className="col-span-1 md:col-span-2 flex bg-linear-to-br from-slate-800 to-slate-900 border border-slate-700 p-6 rounded-2xl shadow-lg items-center justify-between">
                  <div>
                     <h2 className="text-slate-400 font-medium">Your Token Balance</h2>
                     <div className="text-5xl font-black mt-2 text-white flex gap-2 items-center">
@@ -449,7 +461,7 @@ export default function Home() {
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-rose-400"/> Burn Tokens</h3>
                 <div className="space-y-4">
                   <input type="number" placeholder="Raw Amount (integer)" className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:ring-2 ring-rose-500 outline-none" value={burnAmount} onChange={e => setBurnAmount(e.target.value)} />
-                  <button disabled={isBurning} onClick={handleBurn} className="w-full bg-rose-600 hover:bg-rose-700 py-3 rounded-lg font-bold transition-colors mt-[52px] shadow-lg shadow-rose-900/20 disabled:opacity-60 disabled:cursor-not-allowed">{isBurning ? 'Burning...' : 'Burn Tokens'}</button>
+                  <button disabled={isBurning} onClick={handleBurn} className="w-full bg-rose-600 hover:bg-rose-700 py-3 rounded-lg font-bold transition-colors mt-13 shadow-lg shadow-rose-900/20 disabled:opacity-60 disabled:cursor-not-allowed">{isBurning ? 'Burning...' : 'Burn Tokens'}</button>
                 </div>
               </div>
 

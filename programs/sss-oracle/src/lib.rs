@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 use anchor_lang::prelude::*;
 
 pub mod errors;
@@ -5,7 +7,11 @@ pub mod events;
 pub mod instructions;
 pub mod state;
 
-use instructions::*;
+pub use crate::instructions::*;
+pub use crate::instructions::initialize::{InitOracleParams, InitializeOracle};
+pub use crate::instructions::quote::GetQuote;
+pub use crate::instructions::transfer_authority::TransferOracleAuthority;
+pub use crate::instructions::update_price::UpdatePrice;
 
 declare_id!("hntKYM3tbdSnAzYaSU1FvDpFoE8wwBRvY3hpsMHhrN6");
 
@@ -24,7 +30,7 @@ pub mod sss_oracle {
         ctx: Context<InitializeOracle>,
         params: InitOracleParams,
     ) -> Result<()> {
-        initialize::handler(ctx, params)
+        instructions::initialize::handler(ctx, params)
     }
 
     /// Post a verified price update from the Switchboard keeper.
@@ -42,7 +48,7 @@ pub mod sss_oracle {
         confidence: u64,
         timestamp: i64,
     ) -> Result<()> {
-        update_price::handler(ctx, price, confidence, timestamp)
+        instructions::update_price::handler(ctx, price, confidence, timestamp)
     }
 
     /// Compute how many tokens to mint for a given USD input.
@@ -54,8 +60,11 @@ pub mod sss_oracle {
     ///
     /// # Arguments
     /// * `usd_input` — USD amount in micro-units (1 USD = 1_000_000)
-    pub fn mint_quote(ctx: Context<GetQuote>, usd_input: u64) -> Result<()> {
-        quote::mint_quote_handler(ctx, usd_input)
+    pub fn mint_quote(
+        ctx: Context<GetQuote>,
+        usd_input: u64,
+    ) -> Result<()> {
+        instructions::quote::mint_quote_handler(ctx, usd_input)
     }
 
     /// Compute how much USD is owed for a token redemption.
@@ -67,8 +76,11 @@ pub mod sss_oracle {
     ///
     /// # Arguments
     /// * `token_amount` — token amount in base units (e.g. 1_000_000 = 1 token @ 6 decimals)
-    pub fn redeem_quote(ctx: Context<GetQuote>, token_amount: u64) -> Result<()> {
-        quote::redeem_quote_handler(ctx, token_amount)
+    pub fn redeem_quote(
+        ctx: Context<GetQuote>,
+        token_amount: u64,
+    ) -> Result<()> {
+        instructions::quote::redeem_quote_handler(ctx, token_amount)
     }
 
     /// Transfer oracle authority to a new key.
@@ -78,6 +90,6 @@ pub mod sss_oracle {
         ctx: Context<TransferOracleAuthority>,
         new_authority: Pubkey,
     ) -> Result<()> {
-        transfer_authority::handler(ctx, new_authority)
+        instructions::transfer_authority::handler(ctx, new_authority)
     }
 }

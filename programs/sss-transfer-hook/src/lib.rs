@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::Mint;
 use spl_transfer_hook_interface::instruction::ExecuteInstruction;
@@ -184,8 +186,7 @@ pub struct TransferHook<'info> {
     pub destination: UncheckedAccount<'info>,
 
     /// The source authority (owner of source account)
-    /// CHECK: Validated by Token-2022 runtime
-    pub authority: UncheckedAccount<'info>,
+    pub authority: Signer<'info>,
 
     /// Extra Account Meta List PDA
     /// CHECK: Validated by seeds constraint

@@ -7,6 +7,7 @@ use anchor_lang::prelude::*;
 /// Stores the latest Switchboard-verified price and all configuration
 /// needed to compute mint/redeem quotes without external calls.
 #[account]
+#[derive(InitSpace)]
 pub struct OracleConfig {
     /// Authority allowed to post price updates (the Switchboard keeper key).
     pub authority: Pubkey,
@@ -65,22 +66,7 @@ pub struct OracleConfig {
 }
 
 impl OracleConfig {
-    pub const LEN: usize = 8    // discriminator
-        + 32  // authority
-        + 32  // stablecoin_mint
-        + 32  // switchboard_feed
-        + 8   // currency_code
-        + 8   // price_usd
-        + 8   // confidence
-        + 8   // last_update
-        + 8   // max_staleness
-        + 8   // price_lower_bound
-        + 8   // price_upper_bound
-        + 2   // max_deviation_bps
-        + 1   // token_decimals
-        + 1   // bump
-        + 16  // total_minted
-        + 16; // total_redeemed
+    pub const LEN: usize = 188;
 
     /// Check if the cached price is within the staleness window.
     pub fn is_price_fresh(&self, now: i64) -> bool {

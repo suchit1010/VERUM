@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface,
-    TransferChecked, transfer_checked};
+use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use sss_common::seeds::*;
 
 use crate::errors::SssError;

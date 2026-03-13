@@ -10,37 +10,6 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node src/index.ts",
-    "test": "mocha --require ts-node/register 'tests/**/*.ts' --timeout 30000"
-  },
-  "dependencies": {
-    "@coral-xyz/anchor": "^0.32.1",
-    "@solana/web3.js": "^1.98.0",
-    "@solana/spl-token": "^0.4.12",
-    "@stbr/sss-token": "file:../sdk/core",
-    "commander": "^12.1.0",
-    "chalk": "^4.1.2",
-    "ora": "^5.4.1",
-    "toml": "^3.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.14.11",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
-  }
-}
-
-{
-  "name": "@stbr/sss-token-cli",
-  "version": "0.1.0",
-  "description": "Admin CLI for the Solana Stablecoin Standard",
-  "main": "dist/index.js",
-  "bin": {
-    "sss-token": "dist/index.js"
-  },
-  "license": "MIT",
-  "scripts": {
-    "build": "tsc",
-    "start": "ts-node src/index.ts",
     "tui": "ts-node tui.ts",
     "test": "mocha --require ts-node/register 'tests/**/*.ts' --timeout 30000"
   },

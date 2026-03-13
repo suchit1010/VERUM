@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { Program, AnchorProvider, Idl, BN } from '@coral-xyz/anchor';
+import { Program, AnchorProvider, Idl, BN, type Wallet as AnchorWallet } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import { SssAccounts, SSS_STABLECOIN_PROGRAM_ID } from '@stbr/sss-token';
@@ -16,7 +16,7 @@ export function useAnchorProvider() {
     }
     return new AnchorProvider(
       connection,
-      wallet as any,
+      wallet as unknown as AnchorWallet,
       AnchorProvider.defaultOptions()
     );
   }, [connection, wallet]);
@@ -49,12 +49,16 @@ export function useSSS(mintString: string | null) {
 
     // Pre-flight check: Ensure minter role exists
     try {
-      // @ts-ignore - IDL typing might not perfectly map the account namespace
-      await program.account.minterQuota.fetch(minterQuotaPda);
-    } catch (e: any) {
-      if (e.message && e.message.includes('Account does not exist')) {
+      const minterQuotaAccount = (program.account as Record<string, { fetch: (address: PublicKey) => Promise<unknown> }>).minterQuota;
+      if (!minterQuotaAccount) {
+        throw new Error('SDK account client missing minterQuota account mapping.');
+      }
+      await minterQuotaAccount.fetch(minterQuotaPda);
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message.includes('Account does not exist')) {
         throw new Error('Not Authorized: Your wallet is not a configured Minter for this stablecoin.');
       }
+      throw e;
     }
 
     const recipientAta = getAssociatedTokenAddressSync(mintAddress, recipient, false, TOKEN_2022_PROGRAM_ID);

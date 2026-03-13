@@ -38,7 +38,6 @@ pub struct InitOracleParams {
 }
 
 #[derive(Accounts)]
-#[instruction(params: InitOracleParams)]
 pub struct InitializeOracle<'info> {
     /// Payer and initial oracle authority (typically the protocol admin).
     #[account(mut)]

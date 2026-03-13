@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 import { SssOracle } from "../target/types/sss_oracle";
 
@@ -91,8 +91,6 @@ describe("SSS Oracle: Price Feed Integration", () => {
           .accounts({
             authority: keeper.publicKey,
             stablecoinMint: mint,
-            oracleConfig: oracleConfigPda,
-            systemProgram: SystemProgram.programId,
           })
           .signers([keeper])
           .rpc();
@@ -124,8 +122,6 @@ describe("SSS Oracle: Price Feed Integration", () => {
           .accounts({
             authority: keeper.publicKey,
             stablecoinMint: badMint,
-            oracleConfig: badPda,
-            systemProgram: SystemProgram.programId,
           })
           .signers([keeper])
           .rpc();
@@ -157,8 +153,6 @@ describe("SSS Oracle: Price Feed Integration", () => {
           .accounts({
             authority: keeper.publicKey,
             stablecoinMint: badMint2,
-            oracleConfig: badPda2,
-            systemProgram: SystemProgram.programId,
           })
           .signers([keeper])
           .rpc();
@@ -183,8 +177,6 @@ describe("SSS Oracle: Price Feed Integration", () => {
         .accounts({
           authority: keeper.publicKey,
           stablecoinMint: mint,
-          oracleConfig: oracleConfigPda,
-          systemProgram: SystemProgram.programId,
         })
         .signers([keeper])
         .rpc();
@@ -227,8 +219,6 @@ describe("SSS Oracle: Price Feed Integration", () => {
           .accounts({
             authority: keeper.publicKey,
             stablecoinMint: mint,
-            oracleConfig: oracleConfigPda,
-            systemProgram: SystemProgram.programId,
           })
           .signers([keeper])
           .rpc();
@@ -660,8 +650,6 @@ describe("SSS Oracle: Price Feed Integration", () => {
         .accounts({
           authority: newKeeper.publicKey,
           stablecoinMint: brlMint,
-          oracleConfig: brlOraclePda,
-          systemProgram: SystemProgram.programId,
         })
         .signers([newKeeper])
         .rpc();
@@ -695,8 +683,6 @@ describe("SSS Oracle: Price Feed Integration", () => {
         .accounts({
           authority: newKeeper.publicKey,
           stablecoinMint: jpyMint,
-          oracleConfig: jpyOraclePda,
-          systemProgram: SystemProgram.programId,
         })
         .signers([newKeeper])
         .rpc();

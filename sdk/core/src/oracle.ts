@@ -404,8 +404,7 @@ export class OracleModule {
       .transaction();
 
     const sim = await this.provider.connection.simulateTransaction(
-      await this._prepareSimTx(tx),
-      { commitment: "confirmed" }
+      await this._prepareSimTx(tx)
     );
 
     for (const event of this.eventParser.parseLogs(sim.value.logs ?? [])) {
@@ -439,8 +438,7 @@ export class OracleModule {
       .transaction();
 
     const sim = await this.provider.connection.simulateTransaction(
-      await this._prepareSimTx(tx),
-      { commitment: "confirmed" }
+      await this._prepareSimTx(tx)
     );
 
     for (const event of this.eventParser.parseLogs(sim.value.logs ?? [])) {

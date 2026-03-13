@@ -56,8 +56,9 @@ pub fn handler(
         let prev = cfg.price_usd as i128;
         let next = price as i128;
         // deviation_bps = |next - prev| / prev * 10_000
-        let deviation_bps = (next - prev).unsigned_abs()
-            .saturating_mul(10_000)
+        let deviation_bps = next.abs_diff(prev)
+            .checked_mul(10_000)
+            .unwrap_or(u128::MAX)
             .checked_div(prev.unsigned_abs())
             .unwrap_or(u128::MAX);
         require!(
