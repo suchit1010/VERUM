@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "fuzz_tests/fuzz_0",
+]
+resolver = "2"
+
+[profile.release]
+panic = "abort"      # Required by honggfuzz
+opt-level = 3
+
+[profile.dev]
+panic = "abort"      # Required by honggfuzz
