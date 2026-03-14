@@ -185,8 +185,9 @@ pub struct TransferHook<'info> {
     /// CHECK: Validated by Token-2022 runtime
     pub destination: UncheckedAccount<'info>,
 
-    /// The source authority (owner of source account)
-    pub authority: Signer<'info>,
+    /// The source authority (owner/delegate validated by Token-2022 before hook call)
+    /// CHECK: Signer is validated by Token-2022 in the parent transfer instruction.
+    pub authority: UncheckedAccount<'info>,
 
     /// Extra Account Meta List PDA
     /// CHECK: Validated by seeds constraint

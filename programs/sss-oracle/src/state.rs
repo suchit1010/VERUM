@@ -66,7 +66,7 @@ pub struct OracleConfig {
 }
 
 impl OracleConfig {
-    pub const LEN: usize = 188;
+    pub const LEN: usize = 8 + Self::INIT_SPACE;
 
     /// Check if the cached price is within the staleness window.
     pub fn is_price_fresh(&self, now: i64) -> bool {

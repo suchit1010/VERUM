@@ -1,12 +1,18 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": ["es2020"],
     "outDir": "./.tmp-test",
-    "rootDir": ".",
-    "declaration": false,
-    "declarationMap": false,
-    "sourceMap": false
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node", "mocha"]
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist", ".tmp-test"]
+  "exclude": ["node_modules", "dist", "dist-test", ".tmp-test"]
 }
