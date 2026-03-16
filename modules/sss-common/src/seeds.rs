@@ -1,5 +1,5 @@
-/// PDA seed constants — single source of truth for both programs.
-/// O(1) PDA derivation ensures constant-time lookups at any scale.
+//! PDA seed constants — single source of truth for both programs.
+//! O(1) PDA derivation ensures constant-time lookups at any scale.
 
 /// Seed for StablecoinConfig PDA: ["config", mint_pubkey]
 pub const SEED_CONFIG: &[u8] = b"config";

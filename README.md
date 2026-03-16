@@ -34,6 +34,20 @@ Think **OpenZeppelin for Stablecoins** on Solana — the SDK makes deployment ea
 > [!NOTE]  
 > Verified working on Devnet. See [DEVNET_PROOF.md](DEVNET_PROOF.md) for transaction hashes.
 
+## Latest Development (Mar 2026)
+
+- **Transfer Hook security hardening (production-critical):** fixed blacklist enforcement to derive destination/source blacklist PDAs from **token account owner wallets** (not token account addresses), preventing blacklist bypass via new ATA creation.
+- **Strict account validation in hook path:** added checks for expected stablecoin program, token-account decode validity, mint consistency, PDA correctness, and blacklist account ownership before allowing transfer.
+- **Safety cleanup:** removed risky runtime parsing/unwrap patterns in transfer-hook PDA program ID wiring.
+- **Clean compile state:** `cargo check -p sss-transfer-hook` now completes cleanly with no warnings.
+- **Admin CLI modernization:** replaced legacy terminal dashboard flow with a modern single-page Ink-based dashboard and fixed Windows keypair home-dir expansion behavior.
+- **BasketVault kickoff scaffold:** added new Anchor program at `programs/basket-vault` with production-shaped config/account model (`initialize`, `register_asset`, `update_weights`, `set_crisis_mode`), strict weight/authority checks, and crisis-mode controls. Chainlink pricing and SSS CPI mint authorization are the next implementation step.
+- **BasketVault phase-2 (oracle + mint path):** added `update_asset_price` and `mint_against_collateral` instructions, collateral valuation with staleness checks, and guarded CPI mint execution into `sss-stablecoin` (`mint_tokens`) only when active collateral ratio requirements are satisfied.
+- **BasketVault unit tests:** added deterministic tests for weighted collateral valuation and stale-price rejection (`cargo test -p basket-vault` passing).
+- **BasketVault production hardening:** added mint circuit-breaker (`set_minting_paused`), per-transaction mint caps, effective required-CR floor using per-asset minimum CR, full-weight enforcement before mint authorization, and PDA-signed CPI minting into `sss-stablecoin`.
+- **Oracle ingestion hardening:** added `update_asset_price_from_oracle` to sync prices only from verified `sss-oracle` PDA accounts (mint/feed/decimals checks + confidence threshold + staleness checks). Manual `update_asset_price` is now emergency-only.
+- **CI hardening:** workflow now runs `cargo test -p basket-vault` as a dedicated gate in addition to existing Anchor and clippy checks.
+
 ## Installation
 
 ```bash

@@ -4,6 +4,7 @@ import { Keypair, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, Transaction } fr
 import {
   TOKEN_2022_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAccount,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedWithTransferHookInstruction,
@@ -245,6 +246,39 @@ describe("SSS-2: Compliant Stablecoin Extensive Tests", () => {
       expect.fail("Should have blocked transfer to blacklisted dest");
     } catch (err: any) {
       console.log("DEST TRANSFER ERROR:", err);
+      expect(err.message).to.include("DestinationBlacklisted");
+    }
+  });
+
+  it("blocks transfer to blacklisted owner even via fresh non-ATA token account", async () => {
+    const payer = (provider.wallet as any).payer as Keypair;
+    const attackerFreshTokenAccount = await createAccount(
+      provider.connection,
+      payer,
+      mintKeypair.publicKey,
+      attacker.publicKey,
+      undefined,
+      undefined,
+      TOKEN_2022_PROGRAM_ID
+    );
+
+    const transferIx = await createTransferCheckedWithTransferHookInstruction(
+      provider.connection,
+      aliceAta,
+      mintKeypair.publicKey,
+      attackerFreshTokenAccount,
+      alice.publicKey,
+      BigInt(500),
+      6,
+      [],
+      "confirmed",
+      TOKEN_2022_PROGRAM_ID
+    );
+
+    try {
+      await provider.sendAndConfirm(new Transaction().add(transferIx), [alice]);
+      expect.fail("Should have blocked transfer to blacklisted owner via fresh token account");
+    } catch (err: any) {
       expect(err.message).to.include("DestinationBlacklisted");
     }
   });

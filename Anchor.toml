@@ -9,11 +9,13 @@ skip-lint = false
 sss_stablecoin = "HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet"
 sss_transfer_hook = "6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN"
 sss_oracle = "hntKYM3tbdSnAzYaSU1FvDpFoE8wwBRvY3hpsMHhrN6"
+basket_vault = "GULXvsjCCpBLTruteXJwBVAEqf2u6QQkXYeh6DTf2QBV"
 
 [programs.devnet]
 sss_stablecoin = "HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet"
 sss_transfer_hook = "6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN"
 sss_oracle = "hntKYM3tbdSnAzYaSU1FvDpFoE8wwBRvY3hpsMHhrN6"
+basket_vault = "GULXvsjCCpBLTruteXJwBVAEqf2u6QQkXYeh6DTf2QBV"
 
 [registry]
 url = "https://api.apr.dev"

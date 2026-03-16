@@ -3,6 +3,7 @@ members = [
     "programs/sss-stablecoin",
     "programs/sss-transfer-hook",
     "programs/sss-oracle",
+    "programs/basket-vault",
     "modules/sss-common",
 ]
 exclude = [

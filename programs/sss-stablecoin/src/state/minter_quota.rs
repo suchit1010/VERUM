@@ -33,7 +33,11 @@ pub struct MinterQuota {
 impl MinterQuota {
     /// Check if the minter can mint the given amount
     pub fn can_mint(&self, amount: u64) -> bool {
-        self.active && self.minted.checked_add(amount).map_or(false, |total| total <= self.quota)
+        self.active
+            && self
+                .minted
+                .checked_add(amount)
+                .is_some_and(|total| total <= self.quota)
     }
 
     /// Record a mint operation against the quota

@@ -80,6 +80,9 @@ jobs:
         env:
           ANCHOR_WALLET: ${{ github.workspace }}/keypair.json
 
+      - name: Run BasketVault unit tests
+        run: cargo test -p basket-vault
+
       # ── Upload IDL artifacts ──────────────────────────────────────
       - name: Upload IDL artifacts
         uses: actions/upload-artifact@v4
