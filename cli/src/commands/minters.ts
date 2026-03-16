@@ -9,6 +9,40 @@ export function registerMintersCommand(program: Command) {
     .description("Manage minters");
 
   minters
+    .command("list")
+    .description("List all minters")
+    .requiredOption("--mint <mintAddress>", "Stablecoin mint address")
+    .action(async (opts: any) => {
+      const cliConfig = getCliConfig(program.opts());
+      const provider = createProvider(cliConfig);
+
+      try {
+        const mintPubkey = new PublicKey(opts.mint);
+        const stablecoin = await SolanaStablecoin.load(provider, mintPubkey);
+        const allMinters = await stablecoin.getAllMinters();
+
+        console.log("\n👥 Minters List:\n");
+        if (allMinters.length === 0) {
+          console.log("No minters found.");
+        } else {
+          allMinters.forEach((m) => {
+            console.log(formatOutput({
+              minter: m.minter.toBase58(),
+              active: m.active ? "✅" : "❌",
+              quota: m.quota.toString(),
+              minted: m.minted.toString(),
+              remaining: (m.quota - m.minted).toString(),
+            }, cliConfig.outputFormat));
+            console.log("---");
+          });
+        }
+      } catch (err: any) {
+        console.error(`❌ Error: ${err.message}`);
+        process.exit(1);
+      }
+    });
+
+  minters
     .command("add <address>")
     .description("Add a new minter with quota")
     .requiredOption("--mint <mintAddress>", "Stablecoin mint address")

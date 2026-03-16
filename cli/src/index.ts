@@ -18,7 +18,6 @@ console.error = function(...args: any[]) {
 };
 
 import { Command } from "commander";
-import { spawn } from "child_process";
 import path from "path";
 import { registerInitCommand } from "./commands/init";
 import { registerMintCommand } from "./commands/mint";
@@ -29,6 +28,7 @@ import { registerStatusCommand } from "./commands/status";
 import { registerComplianceCommand } from "./commands/compliance";
 import { registerMintersCommand } from "./commands/minters";
 import { registerAuditCommand } from "./commands/audit";
+import { registerHoldersCommand } from "./commands/holders";
 
 const program = new Command();
 
@@ -55,22 +55,20 @@ registerStatusCommand(program);
 registerComplianceCommand(program);
 registerMintersCommand(program);
 registerAuditCommand(program);
+registerHoldersCommand(program);
 
 // TUI command
-program
-  .command("tui <mintAddress> [cluster]")
-  .description("Launch interactive terminal dashboard (admin mode)")
-  .option("-u, --url <url>", "Custom RPC URL")
-  .action((mintAddress: string, cluster: string = "devnet", opts: any) => {
-    const tuiPath = path.join(__dirname, "../tui.ts");
-    const child = spawn("npx", ["ts-node", tuiPath, mintAddress, cluster], {
-      stdio: "inherit",
-      cwd: path.join(__dirname, ".."),
-    });
+import { startApp } from "./App";
+import { createProvider, getCliConfig } from "./config";
 
-    child.on("exit", (code) => {
-      process.exit(code || 0);
-    });
+program
+  .command("dashboard <mintAddress>")
+  .description("Launch modern interactive terminal dashboard (admin mode)")
+  .option("-u, --url <url>", "Custom RPC URL")
+  .action((mintAddress: string, opts: any) => {
+    const cliConfig = getCliConfig(program.opts());
+    const provider = createProvider(cliConfig);
+    startApp(mintAddress, provider);
   });
 
 program.parse(process.argv);

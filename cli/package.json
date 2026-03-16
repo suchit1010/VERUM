@@ -15,19 +15,21 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1",
-    "@solana/web3.js": "^1.98.0",
     "@solana/spl-token": "^0.4.12",
+    "@solana/web3.js": "^1.98.0",
     "@stbr/sss-token": "file:../sdk/core",
-    "commander": "^12.1.0",
+    "@types/react": "^18.3.28",
     "chalk": "^4.1.2",
+    "commander": "^12.1.0",
+    "ink": "^3.2.0",
+    "ink-select-input": "^4.2.1",
+    "ink-text-input": "^4.0.3",
     "ora": "^5.4.1",
-    "toml": "^3.0.0",
-    "blessed": "^0.1.81",
-    "blessed-contrib": "^4.11.0"
+    "react": "^18.3.1",
+    "toml": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.11",
-    "@types/blessed": "^0.1.22",
     "chai": "^4.3.7",
     "mocha": "^11.7.5",
     "ts-node": "^10.9.2",

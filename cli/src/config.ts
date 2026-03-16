@@ -2,6 +2,7 @@ import { Connection, Keypair } from "@solana/web3.js";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
 import * as toml from "toml";
 
 export interface CliConfig {
@@ -16,7 +17,9 @@ export interface CliConfig {
  * Load keypair from file path (supports ~ expansion)
  */
 export function loadKeypair(keypairPath: string): Keypair {
-  const resolved = keypairPath.replace("~", process.env.HOME || "");
+  const resolved = keypairPath.startsWith("~") 
+    ? path.join(os.homedir(), keypairPath.slice(1))
+    : keypairPath;
   const raw = fs.readFileSync(resolved, "utf-8");
   const secretKey = Uint8Array.from(JSON.parse(raw));
   return Keypair.fromSecretKey(secretKey);

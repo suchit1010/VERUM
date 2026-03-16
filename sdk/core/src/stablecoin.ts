@@ -466,6 +466,25 @@ export class SolanaStablecoin {
     return account.paused;
   }
 
+  async getAllMinters(): Promise<MinterQuota[]> {
+    try {
+      const accounts = await (this.program.account as any).minterQuota.all([
+        { memcmp: { offset: 8, bytes: this.mintAddress.toBase58() } }
+      ]);
+      return accounts.map((a: any) => ({
+        mint: a.account.mint,
+        minter: a.account.minter,
+        quota: BigInt(a.account.quota.toString()),
+        minted: BigInt(a.account.minted.toString()),
+        active: a.account.active,
+        bump: a.account.bump,
+        createdAt: a.account.createdAt.toNumber(),
+      }));
+    } catch {
+      return [];
+    }
+  }
+
   /**
    * Get a minter's quota info.
    */
