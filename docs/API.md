@@ -114,3 +114,8 @@ All services expose `GET /health`:
   "uptime": 3600
 }
 ```
+
+## Current Scope Notes
+
+- Basket Vault operations (`initialize`, `register_asset`, `update_asset_price_from_oracle`, `mint_against_collateral`) are currently executed on-chain via Anchor/SDK flows, not dedicated backend REST endpoints.
+- Oracle price ingestion hardening is implemented in-program (`sss-oracle` + `basket-vault`) and validated by integration tests.

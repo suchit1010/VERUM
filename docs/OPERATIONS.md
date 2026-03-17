@@ -1,5 +1,41 @@
 # Operations Runbook
 
+## Localnet Preflight (Recommended)
+
+### 1) Start validator
+
+On Windows, prefer WSL for `solana-test-validator` execution.
+
+```bash
+wsl --exec bash -lc 'cd /mnt/c/Users/<you>/earn/solana-stablecoin-standard; solana-test-validator --reset'
+```
+
+### 2) Deploy all programs to localnet
+
+```bash
+wsl --exec bash -lc '
+	cd /mnt/c/Users/<you>/earn/solana-stablecoin-standard
+	WALLET=/mnt/c/Users/<you>/.config/solana/id.json
+	solana airdrop 100 --url http://127.0.0.1:8899 --keypair $WALLET
+	solana program deploy --url http://127.0.0.1:8899 --keypair $WALLET --program-id target/deploy/sss_stablecoin-keypair.json target/deploy/sss_stablecoin.so
+	solana program deploy --url http://127.0.0.1:8899 --keypair $WALLET --program-id target/deploy/sss_transfer_hook-keypair.json target/deploy/sss_transfer_hook.so
+	solana program deploy --url http://127.0.0.1:8899 --keypair $WALLET --program-id target/deploy/sss_oracle-keypair.json target/deploy/sss_oracle.so
+	solana program deploy --url http://127.0.0.1:8899 --keypair $WALLET --program-id target/deploy/basket_vault-keypair.json target/deploy/basket_vault.so
+'
+```
+
+### 3) Run full integration matrix
+
+```bash
+ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 \
+ANCHOR_WALLET=~/.config/solana/id.json \
+npx ts-mocha -p ./tsconfig.json -t 1000000 \
+	tests/sss-1.ts tests/sss-2.ts tests/sss-3.ts \
+	tests/sss-1-advanced.ts tests/sss-2-advanced.ts \
+	tests/sss-lifecycle.ts tests/sss-oracle.ts tests/basket-vault.ts \
+	sdk/core/tests/sdk.test.ts sdk/core/tests/sdk-advanced.ts
+```
+
 ## Quick Reference
 
 | Operation | Command | Role Required |
@@ -52,3 +88,14 @@ sss-token freeze <token_account> --mint <address>
 # 3. Seize tokens to treasury
 sss-token seize <token_account> --to <treasury> --mint <address>
 ```
+
+## Basket Vault Operator Actions (Phase-2)
+
+| Operation | Who | Notes |
+|---|---|---|
+| `initialize` | Basket authority | Sets CR params, confidence threshold, mint cap |
+| `register_asset` | Basket authority | Adds mint/feed/weight/min-CR |
+| `update_weights` | Basket authority | Controlled reweighting with limits |
+| `update_asset_price_from_oracle` | Basket authority/keeper flow | Enforces oracle provenance + staleness/confidence checks |
+| `mint_against_collateral` | Basket authority | CPI mints into `sss-stablecoin` only if CR constraints pass |
+| `set_minting_paused` | Basket authority | Emergency circuit breaker |

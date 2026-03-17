@@ -1,8 +1,8 @@
 #![allow(unexpected_cfgs)]
 
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_pack::Pack;
 use anchor_spl::token_interface::Mint;
+use spl_token_2022::extension::StateWithExtensions;
 use spl_token_2022::state::Account as TokenAccount;
 use spl_transfer_hook_interface::instruction::ExecuteInstruction;
 use spl_tlv_account_resolution::{
@@ -55,21 +55,21 @@ pub mod sss_transfer_hook {
         // Parse token accounts so PDA checks are owner-based (wallet-level),
         // not ATA-level (account-level).
         let source_data = ctx.accounts.source.try_borrow_data()?;
-        let source_token = TokenAccount::unpack(&source_data)
+        let source_token = StateWithExtensions::<TokenAccount>::unpack(&source_data)
             .map_err(|_| error!(TransferHookError::InvalidSourceTokenAccount))?;
 
         let destination_data = ctx.accounts.destination.try_borrow_data()?;
-        let destination_token = TokenAccount::unpack(&destination_data)
+        let destination_token = StateWithExtensions::<TokenAccount>::unpack(&destination_data)
             .map_err(|_| error!(TransferHookError::InvalidDestinationTokenAccount))?;
 
         // Ensure both token accounts belong to this mint.
         require_keys_eq!(
-            source_token.mint,
+            source_token.base.mint,
             ctx.accounts.mint.key(),
             TransferHookError::SourceMintMismatch,
         );
         require_keys_eq!(
-            destination_token.mint,
+            destination_token.base.mint,
             ctx.accounts.mint.key(),
             TransferHookError::DestinationMintMismatch,
         );
@@ -82,7 +82,7 @@ pub mod sss_transfer_hook {
             &[
                 SEED_BLACKLIST,
                 mint_key.as_ref(),
-                source_token.owner.as_ref(),
+                source_token.base.owner.as_ref(),
             ],
             &SSS_STABLECOIN_PROGRAM_ID,
         );
@@ -96,7 +96,7 @@ pub mod sss_transfer_hook {
             &[
                 SEED_BLACKLIST,
                 mint_key.as_ref(),
-                destination_token.owner.as_ref(),
+                destination_token.base.owner.as_ref(),
             ],
             &SSS_STABLECOIN_PROGRAM_ID,
         );

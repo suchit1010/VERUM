@@ -28,8 +28,10 @@ Think **OpenZeppelin for Stablecoins** on Solana — the SDK makes deployment ea
 
 | Program | Devnet | Localnet |
 |---------|--------|----------|
-| SSS Core | `HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet` | Same as devnet |
-| SSS Hook | `6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN` | Same as devnet |
+| SSS Core (`sss-stablecoin`) | `HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet` | Same as devnet |
+| SSS Hook (`sss-transfer-hook`) | `6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN` | Same as devnet |
+| SSS Oracle (`sss-oracle`) | `hntKYM3tbdSnAzYaSU1FvDpFoE8wwBRvY3hpsMHhrN6` | Same as devnet |
+| Basket Vault (`basket-vault`) | `HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB` | Same as devnet |
 
 > [!NOTE]  
 > Verified working on Devnet. See [DEVNET_PROOF.md](DEVNET_PROOF.md) for transaction hashes.
@@ -47,6 +49,9 @@ Think **OpenZeppelin for Stablecoins** on Solana — the SDK makes deployment ea
 - **BasketVault production hardening:** added mint circuit-breaker (`set_minting_paused`), per-transaction mint caps, effective required-CR floor using per-asset minimum CR, full-weight enforcement before mint authorization, and PDA-signed CPI minting into `sss-stablecoin`.
 - **Oracle ingestion hardening:** added `update_asset_price_from_oracle` to sync prices only from verified `sss-oracle` PDA accounts (mint/feed/decimals checks + confidence threshold + staleness checks). Manual `update_asset_price` is now emergency-only.
 - **CI hardening:** workflow now runs `cargo test -p basket-vault` as a dedicated gate in addition to existing Anchor and clippy checks.
+- **Transfer hook Token-2022 compatibility fix:** hook now decodes token accounts with extension-aware parsing (`StateWithExtensions`), eliminating false negatives on valid extended token accounts.
+- **SSS-2 regression test hardening:** the non-ATA blacklist bypass test now creates a true non-associated token account (explicit keypair), validating owner-based blacklist protection.
+- **Runtime validation closure:** full TypeScript + SDK integration matrix now passes on localnet (`191 passing`) after deploying all programs and aligning Basket Vault program ID.
 
 ## Installation
 
@@ -235,7 +240,9 @@ const [entry] = PublicKey.findProgramAddressSync(
 solana-stablecoin-standard/
 ├── programs/
 │   ├── sss-stablecoin/       # Main program (SSS-1 + SSS-2)
-│   └── sss-transfer-hook/    # Transfer hook (SSS-2 compliance)
+│   ├── sss-oracle/           # Oracle config + keeper update path
+│   ├── sss-transfer-hook/    # Transfer hook (SSS-2 compliance)
+│   └── basket-vault/         # Multi-asset collateral manager (phase-2)
 ├── sdk/
 │   └── core/                 # @stbr/sss-token TypeScript SDK
 ├── cli/                      # sss-token Admin CLI
@@ -247,8 +254,14 @@ solana-stablecoin-standard/
 ## Testing
 
 ```bash
-# Run all program tests
-anchor test
+# Run full integration + SDK matrix on localnet
+ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 \
+ANCHOR_WALLET=~/.config/solana/id.json \
+npx ts-mocha -p ./tsconfig.json -t 1000000 \
+  tests/sss-1.ts tests/sss-2.ts tests/sss-3.ts \
+  tests/sss-1-advanced.ts tests/sss-2-advanced.ts \
+  tests/sss-lifecycle.ts tests/sss-oracle.ts tests/basket-vault.ts \
+  sdk/core/tests/sdk.test.ts sdk/core/tests/sdk-advanced.ts
 
 # Run SDK unit tests
 cd sdk/core && npm test

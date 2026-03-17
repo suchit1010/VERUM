@@ -252,12 +252,13 @@ describe("SSS-2: Compliant Stablecoin Extensive Tests", () => {
 
   it("blocks transfer to blacklisted owner even via fresh non-ATA token account", async () => {
     const payer = (provider.wallet as any).payer as Keypair;
+    const freshTokenAccount = Keypair.generate();
     const attackerFreshTokenAccount = await createAccount(
       provider.connection,
       payer,
       mintKeypair.publicKey,
       attacker.publicKey,
-      undefined,
+      freshTokenAccount,
       undefined,
       TOKEN_2022_PROGRAM_ID
     );

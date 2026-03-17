@@ -4,52 +4,76 @@
 
 The SSS architecture follows a composable three-layer design:
 
-### Layer 1 — Base SDK
-Token creation with mint authority, freeze authority, and metadata. Issuers choose which Token-2022 extensions to enable. Includes role-based access control and pause mechanism.
+### Layer 1 — Base
+Token-2022 mint lifecycle with metadata, RBAC, pause state, and quota tracking.
 
 ### Layer 2 — Modules
-Composable pieces that add capabilities:
-- **Compliance Module** — Transfer hook, blacklist PDAs, permanent delegate
-- **Privacy Module** — Confidential transfers, allowlists (future SSS-3)
+- **Compliance Module** — transfer hook + blacklist PDAs + permanent delegate
+- **Oracle Module** — keeper-updated oracle state + quote primitives
+- **Basket Module** — collateral registry, weighted valuation, CR-gated minting
+- **Privacy Module (SSS-3 roadmap)** — confidential transfer controls
 
-Each module is independently testable and optional.
+### Layer 3 — Presets / Products
+- **SSS-1**: minimal stablecoin (base only)
+- **SSS-2**: compliant stablecoin (base + compliance)
+- **Basket Vault (phase-2)**: collateral manager that authorizes CPI mint into SSS
 
-### Layer 3 — Standard Presets
-Opinionated combinations of Layer 1 + Layer 2:
-- **SSS-1**: Minimal Stablecoin (Layer 1 only)
-- **SSS-2**: Compliant Stablecoin (Layer 1 + Compliance Module)
+## On-Chain Program Topology
 
-## On-Chain Programs
+| Program | Responsibility |
+|---|---|
+| `sss-stablecoin` | Core mint/burn/freeze/pause/role/compliance instructions |
+| `sss-transfer-hook` | Runtime transfer enforcement for blacklist policy |
+| `sss-oracle` | Price config + keeper-updated on-chain price/confidence state |
+| `basket-vault` | Multi-asset collateral config, oracle ingestion, CR-based mint authorization |
 
-### sss-stablecoin (Main Program)
-Single configurable program supporting both presets via `StablecoinConfig` flags.
+## Core PDA Accounts
 
-**PDA Accounts:**
+### `sss-stablecoin`
 | PDA | Seeds | Purpose |
 |-----|-------|---------|
-| StablecoinConfig | `["config", mint]` | Feature flags, metadata |
+| StablecoinConfig | `["config", mint]` | Feature flags + token config |
 | RoleConfig | `["roles", mint]` | RBAC assignments |
-| MinterQuota | `["minter", mint, minter]` | Per-minter quota tracking |
+| MinterQuota | `["minter", mint, minter]` | Per-minter lifetime caps |
 | PauseState | `["pause", mint]` | Global pause toggle |
-| BlacklistEntry | `["blacklist", mint, address]` | O(1) blacklist lookup |
+| BlacklistEntry | `["blacklist", mint, wallet]` | O(1) blacklist lookup |
 
-### sss-transfer-hook (Hook Program)
-Separate program implementing Token-2022 Transfer Hook interface. Called by Solana runtime on every transfer. Checks sender + receiver against blacklist PDAs.
+### `sss-transfer-hook`
+| PDA | Seeds | Purpose |
+|-----|-------|---------|
+| ExtraAccountMetaList | `["extra-account-metas", mint]` | Runtime account resolution for hook execution |
 
-## Scalability Design
+### `sss-oracle`
+| PDA | Seeds | Purpose |
+|-----|-------|---------|
+| OracleConfig | `["oracle_cfg", stablecoin_mint]` | Feed identity + bounds + latest price/confidence |
 
-| Design | Why It Scales |
-|--------|--------------|
-| PDA-based blacklist | O(1) lookup — no iteration over lists |
-| Per-minter quota PDAs | Independent state — no shared locks |
-| Transfer hook as separate program | Runtime-enforced — no CPI overhead |
-| Event-driven backend | Stateless workers — horizontally scalable |
-| Token-2022 native extensions | Protocol-level enforcement — zero cost |
+### `basket-vault`
+| PDA | Seeds | Purpose |
+|-----|-------|---------|
+| GlobalConfig | `["basket-config", basket_mint]` | Asset registry, CR params, oracle confidence limits |
+
+## Runtime Flow: SSS-2 Transfer Enforcement
+
+1. User submits Token-2022 `transfer_checked`.
+2. Token runtime invokes `sss-transfer-hook::transfer_hook`.
+3. Hook decodes source/destination token accounts with extension-aware parsing.
+4. Hook derives blacklist PDAs from **owner wallets** (`["blacklist", mint, owner]`) for both ends.
+5. Transfer is blocked if either blacklist account exists and is owned by `sss-stablecoin`.
+
+This closes ATA-level bypasses by enforcing wallet-level sanctions state.
+
+## Runtime Flow: Basket Collateral Mint Authorization
+
+1. Governance initializes `basket-vault` for a basket mint and registers collateral assets.
+2. Prices sync from `sss-oracle` through `update_asset_price_from_oracle` with feed/mint/decimals/confidence/staleness checks.
+3. Vault computes weighted collateral value and effective required CR.
+4. If constraints pass (not paused, max per tx, full weights, CR satisfied), vault signs CPI to `sss-stablecoin::mint_tokens`.
 
 ## Security Model
 
-- **Role-based access control** with master authority fallback
-- **Feature gating** — SSS-2 instructions fail gracefully on SSS-1 tokens
-- **Checked arithmetic** throughout — no overflow vulnerabilities
-- **PDA bumps stored** — not recalculated
-- **Emergency pause** mechanism for all operations
+- Role-based authorization with explicit signer checks
+- Owner-based blacklist enforcement on every transfer
+- Program/account identity checks before compliance decisions
+- Checked arithmetic for collateral valuation and CR gating
+- Emergency controls: global pause, crisis mode, minting pause, per-tx mint cap

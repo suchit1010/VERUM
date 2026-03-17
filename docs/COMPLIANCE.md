@@ -15,6 +15,12 @@ The SSS-2 standard is designed to meet requirements from:
 - Real-time enforcement via transfer hook
 - No gaps — every transfer is checked
 
+### Transfer-Hook Hardening (Mar 2026)
+- Blacklist PDAs are derived from **wallet owners**, not token-account addresses.
+- Source and destination token accounts are decoded with Token-2022 extension-aware parsing.
+- Hook validates stablecoin program identity, mint consistency, PDA correctness, and blacklist account ownership.
+- This prevents bypasses via fresh token-account creation (including non-ATA paths).
+
 ### Token Seizure
 - Permanent delegate allows transferring from any account
 - Required by regulators for sanctions enforcement
@@ -57,3 +63,11 @@ The compliance service provides integration points for:
 - Real-time event monitoring via WebSocket
 - Webhook notifications for compliance events
 - Configurable alerts with retry logic
+
+## Expected Enforcement Outcomes
+
+- Transfer from blacklisted wallet → `SourceBlacklisted`
+- Transfer to blacklisted wallet → `DestinationBlacklisted`
+- Invalid hook wiring / bad account assumptions → explicit hook validation errors
+
+These outcomes are covered by integration tests in `tests/sss-2.ts` and lifecycle tests in `tests/sss-lifecycle.ts`.

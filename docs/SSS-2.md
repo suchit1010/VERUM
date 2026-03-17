@@ -18,7 +18,7 @@ SSS-2 extends SSS-1 with on-chain compliance enforcement. Designed for regulated
 
 ## Additional Features (over SSS-1)
 - ✅ On-chain blacklist with O(1) lookup via PDAs
-- ✅ Transfer hook blocking blacklisted addresses
+- ✅ Transfer hook blocking blacklisted addresses (owner-wallet based)
 - ✅ Token seizure via permanent delegate
 - ✅ Blacklister and seizer roles
 - ✅ Audit trail via events
@@ -42,17 +42,27 @@ Token-2022 runtime detects TransferHook extension
         ▼
 Runtime calls sss-transfer-hook::transfer_hook()
         │
-        ├── Derive source BlacklistEntry PDA
+        ├── Decode source/destination token accounts (Token-2022 extension-aware)
+        │
+        ├── Derive source BlacklistEntry PDA from source owner wallet
         │   └── PDA exists? → BLOCK transfer
         │
-        ├── Derive destination BlacklistEntry PDA
+        ├── Derive destination BlacklistEntry PDA from destination owner wallet
         │   └── PDA exists? → BLOCK transfer
+        │
+        ├── Validate stablecoin program account + blacklist account owners
+        │   └── Mismatch? → BLOCK transfer
         │
         └── Neither blacklisted → ALLOW transfer
 ```
 
 ## Compliance Model
 SSS-2 uses **proactive compliance** — every transfer is checked against the blacklist in real-time. No gaps.
+
+### Security Notes (Current Implementation)
+- Blacklist keys are wallet-level (`["blacklist", mint, owner_wallet]`), preventing token-account churn bypasses.
+- Hook enforces mint consistency for source/destination accounts.
+- Hook rejects malformed account wiring before compliance decisions.
 
 ## Configuration
 

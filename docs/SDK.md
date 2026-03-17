@@ -99,6 +99,12 @@ const paused = await stablecoin.isPaused();
 const quota = await stablecoin.getMinterQuota(minterPubkey);
 ```
 
+## Current SDK Scope
+
+- The published SDK focuses on `sss-stablecoin` flows (SSS-1/SSS-2/SSS-3 preset behavior).
+- Basket Vault phase-2 and oracle-ingestion operations are currently exercised through Anchor program clients in integration tests.
+- High-level Basket Vault convenience wrappers can be added later without changing on-chain semantics.
+
 ## PDA Accounts
 
 ```typescript
