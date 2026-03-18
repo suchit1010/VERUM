@@ -1,0 +1,55 @@
+# Node / JavaScript / Frontend
+node_modules/
+app/node_modules/
+app/dist/
+app/build/
+.vercel
+.next/
+dist/
+build/
+
+# Rust / Anchor / Solana
+target/
+**/target/
+test-ledger/
+deployments/
+*.so   # compiled program .so files (sometimes people commit them accidentally)
+
+# Anchor local testing
+test-ledger/
+validator-ledger/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+app/.env
+app/.env.*
+
+# Logs & temp files
+*.log
+*.logs
+.DS_Store
+Thumbs.db
+
+# Editor / IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependency subfolders (you already have this, but making it more robust)
+deps/*/target/
+deps/*/.git   # ← important if you decide to keep deps/sss & deps/svs as normal folders
+
+# Your extra folders (from the tree)
+verum/target/
+verum/**/target/
+
+# Optional: if you ever generate IDL files outside of target/idl/
+# idl/   (uncomment only if you create this folder manually)
+
+# Chainlink / scripts / tests temp files (if any)
+chainlink-functions/*.js.cache
+scripts/*.log
