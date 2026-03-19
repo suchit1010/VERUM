@@ -45,6 +45,10 @@ ledger/
 *.so
 rust/
 llvm/
+/target/
+/.anchor/
+/rust/
+/llvm/
 platform-tools-linux-x86_64.tar.bz2
 
 # Fuzz / Trident outputs
