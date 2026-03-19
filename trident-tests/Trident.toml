@@ -1,0 +1,16 @@
+# Trident Fuzz Testing Configuration
+# Run from workspace root: trident fuzz run fuzz_0
+
+[fuzz]
+fuzzing_with_stats = false
+allow_duplicate_txs = false
+
+[[validator.programs]]
+name = "sss_stablecoin"
+program_id = "HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet"
+program_path = "../programs/sss-stablecoin"
+
+[[validator.programs]]
+name = "sss_transfer_hook"
+program_id = "6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN"
+program_path = "../programs/sss-transfer-hook"

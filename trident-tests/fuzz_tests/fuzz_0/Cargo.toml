@@ -1,0 +1,22 @@
+[package]
+name = "fuzz_0"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# honggfuzz entry-point binary
+[[bin]]
+name = "fuzz_0"
+path = "src/bin/fuzz_0.rs"
+doc = false
+
+[dependencies]
+honggfuzz = "0.5"
+anchor-lang = "0.32.1"
+anchor-spl = "0.32.1"
+arbitrary = { version = "1", features = ["derive"] }
+
+# Programs under test — compiled without their BPF entrypoints so they
+# can be linked directly into the fuzz harness binary.
+sss-stablecoin = { path = "../../../programs/sss-stablecoin", features = ["no-entrypoint"] }
+sss-common      = { path = "../../../modules/sss-common" }

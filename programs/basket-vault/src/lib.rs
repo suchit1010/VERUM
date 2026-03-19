@@ -8,8 +8,8 @@ use anchor_lang::prelude::*;
 
 pub mod errors;
 pub mod state;
+pub mod math;
 pub mod oracle;
-pub mod oracle_aggregator;
 pub mod svs_interface;
 pub mod sss_interface;
 pub mod instructions;
@@ -19,10 +19,9 @@ use instructions::mint_basket::*;
 use instructions::redeem_basket::*;
 use instructions::rebalance_weights::*;
 use instructions::emergency::*;
-use instructions::liquidate_position::*;
+use instructions::liquidate::*;
 
-// ── Replace after `anchor build && anchor deploy` ─────────────────────────────
-declare_id!("6G1N31NpMwodAgcF4hgMT9JPmzxELdeUGe66xEPssEht");
+declare_id!("HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB");
 
 #[program]
 pub mod basket_vault {
@@ -48,8 +47,8 @@ pub mod basket_vault {
     /// remaining_accounts per asset (6 × N assets):
     ///   svs_vault, user_asset_account, vault_asset_account,
     ///   user_shares_account, shares_mint, token_owner_pda
-    pub fn redeem_basket(
-        ctx: Context<RedeemBasket>,
+    pub fn redeem_basket<'info>(
+        ctx: Context<'_, '_, '_, 'info, RedeemBasket<'info>>,
         basket_amount: u64,
         min_assets_per_vault: Vec<u64>,
     ) -> Result<()> {
@@ -70,15 +69,8 @@ pub mod basket_vault {
         instructions::emergency::handler(ctx, active)
     }
 
-    /// Keeper liquidation path for unhealthy positions.
-    /// Trigger: target position CR < 120%.
-    /// Effect: burn liquidator BASKET, reduce target debt, apply 5% keeper bonus
-    /// via insurance buffer, absorb bad debt from insurance and enter emergency
-    /// mode if insurance is insufficient.
-    pub fn liquidate_position(
-        ctx: Context<LiquidatePosition>,
-        repay_amount: u64,
-    ) -> Result<()> {
-        instructions::liquidate_position::handler(ctx, repay_amount)
+    /// Execute a graduated liquidation against an undercollateralized position.
+    pub fn liquidate(ctx: Context<Liquidate>, repay_amount: u64) -> Result<()> {
+        instructions::liquidate::handler(ctx, repay_amount)
     }
 }

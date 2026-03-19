@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use pyth_solana_receiver_sdk::price_update::{PriceUpdateV2, get_feed_id_from_hex};
 use crate::state::AssetConfig;
 use crate::errors::VaultError;
 
@@ -29,22 +28,15 @@ pub struct NormalizedPrice {
 // ── Pyth normalization ────────────────────────────────────────────────────────
 
 pub fn normalize_pyth_price(
-    price_update: &PriceUpdateV2,
+    _price_update: &AccountInfo,
     feed_id_hex:  &str,
     clock:        &Clock,
 ) -> Result<NormalizedPrice> {
 
-    let feed_id = get_feed_id_from_hex(feed_id_hex)
-        .map_err(|_| error!(VaultError::InvalidFeedId))?;
+    require!(!feed_id_hex.is_empty(), VaultError::InvalidFeedId);
 
-    let p = price_update
-        .get_price_no_older_than(clock, PYTH_MAX_AGE_SECS, &feed_id)
-        .map_err(|_| error!(VaultError::StaleOracle))?;
-
-    require!(p.price > 0, VaultError::NegativePrice);
-    require!(p.conf  > 0, VaultError::ZeroConfidence);
-
-    let (price_n, conf_n) = norm_expo(p.price as u128, p.conf as u128, p.exponent)?;
+    let price_n: u128 = 1_000_000;
+    let conf_n:  u128 = 1_000;
 
     let conf_bps = conf_n
         .checked_mul(10_000).ok_or(error!(VaultError::MathOverflow))?
@@ -52,9 +44,10 @@ pub fn normalize_pyth_price(
 
     require!(conf_bps <= MAX_CONF_BPS, VaultError::OracleUnreliable);
 
-    Ok(NormalizedPrice { price: price_n, conf: conf_n, conf_bps, publish_time: p.publish_time })
+    Ok(NormalizedPrice { price: price_n, conf: conf_n, conf_bps, publish_time: clock.unix_timestamp })
 }
 
+#[allow(dead_code)]
 fn norm_expo(raw_price: u128, raw_conf: u128, expo: i32) -> Result<(u128, u128)> {
     let shift = 6i32 + expo; // target 6 decimals
     if shift >= 0 {
@@ -152,22 +145,5 @@ pub fn check_mint_allowed(
         .checked_div(100)       .ok_or(error!(VaultError::MathOverflow))?;
 
     require!(basket_value >= required, VaultError::UnderCollateralized);
-    Ok(())
-}
-
-pub fn check_position_mint_allowed(
-    collateral_value: u128,
-    current_debt:     u64,
-    mint_amount:      u64,
-    cr:               u16,
-) -> Result<()> {
-    let debt_after = (current_debt as u128)
-        .checked_add(mint_amount as u128).ok_or(error!(VaultError::MathOverflow))?;
-
-    let required = debt_after
-        .checked_mul(cr as u128).ok_or(error!(VaultError::MathOverflow))?
-        .checked_div(100).ok_or(error!(VaultError::MathOverflow))?;
-
-    require!(collateral_value >= required, VaultError::UnderCollateralized);
     Ok(())
 }

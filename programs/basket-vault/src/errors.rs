@@ -22,10 +22,6 @@ pub enum VaultError {
     #[msg("Amount must be > 0")]                  ZeroAmount,
     #[msg("Insufficient user balance")]           InsufficientBalance,
     #[msg("Slippage exceeded")]                   SlippageExceeded,
-    #[msg("Invalid user shares owner")]           InvalidUserSharesOwner,
-    #[msg("User position owner mismatch")]        PositionOwnerMismatch,
-    #[msg("No outstanding debt in position")]     NoOutstandingDebt,
-    #[msg("Position not liquidatable (CR >= 120%)")] NotLiquidatable,
 
     // Protocol
     #[msg("Emergency mode active")]               EmergencyModeActive,
@@ -38,4 +34,17 @@ pub enum VaultError {
     #[msg("Weight below 5% minimum")]             WeightBelowMinimum,
     #[msg("Weight above 35% maximum")]            WeightAboveMaximum,
     #[msg("Weight shift >5% per quarter")]        WeightShiftTooLarge,
+    // Liquidation
+    #[msg("Position not liquidatable (healthy CR)")]    PositionNotLiquidatable,
+    #[msg("Insufficient collateral for liquidation")]   InsufficientCollateralForLiquidation,
+    #[msg("No valid oracles found or all stale")]       NoValidOracles,
+    #[msg("Liquidator is position owner")]              LiquidatorIsOwner,
+    #[msg("Liquidation would exceed max per zone")]     LiquidationExceedsMaxPerZone,
+    #[msg("Liquidation circuit breaker triggered")]     LiquidationCircuitBreakerTriggered,
+
+    // CPI & account validation
+    #[msg("CPI call failed")]                           CPIFailed,
+    #[msg("Invalid account discriminator")]             InvalidDiscriminator,
+    #[msg("SVS-1 vault account mismatch")]              SVSVaultMismatch,
+    #[msg("SSS program account mismatch")]              SSSProgramMismatch,
 }

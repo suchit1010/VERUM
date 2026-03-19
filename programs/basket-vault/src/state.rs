@@ -1,9 +1,8 @@
 use anchor_lang::prelude::*;
 
 // ── Seeds ─────────────────────────────────────────────────────────────────────
-pub const GLOBAL_CONFIG_SEED: &[u8]  = b"global_config";
-pub const VAULT_AUTH_SEED:    &[u8]  = b"basket_vault_authority";
-pub const USER_POSITION_SEED: &[u8]  = b"user_position";
+pub const GLOBAL_CONFIG_SEED: &[u8] = b"global_config";
+pub const VAULT_AUTH_SEED: &[u8] = b"basket_vault_authority";
 
 // ── Pyth devnet feed IDs (hex) ────────────────────────────────────────────────
 // Replace with mainnet IDs before production.
@@ -46,33 +45,48 @@ pub struct AssetConfig {
 
 #[account]
 pub struct GlobalConfig {
-    pub basket_mint:               Pubkey,   // BASKET SPL mint (owned by SSS)
-    pub sss_program:               Pubkey,   // SSS stablecoin program ID
-    pub svs_program:               Pubkey,   // SVS-1 vault program ID
-    pub rebalance_authority:       Pubkey,   // multisig → DAO
-    pub emergency_authority:       Pubkey,
-    pub vault_authority_bump:      u8,
-    pub total_minted:              u64,      // BASKET in circulation (6 dec)
-    pub insurance_fund_lamports:   u64,
-    pub emergency_mode:            bool,
-    pub last_rebalance_timestamp:  i64,
+    pub basket_mint: Pubkey,               // BASKET SPL mint (owned by SSS)
+    pub sss_program: Pubkey,               // SSS stablecoin program ID
+    pub svs_program: Pubkey,               // SVS-1 vault program ID
+    pub rebalance_authority: Pubkey,       // multisig → DAO
+    pub emergency_authority: Pubkey,
+    pub vault_authority_bump: u8,
+    pub total_minted: u64,                 // BASKET in circulation (6 dec)
+    pub insurance_fund_lamports: u64,
+    pub emergency_mode: bool,
+    pub last_rebalance_timestamp: i64,
     pub last_rebalance_request_id: [u8; 32],
-    pub asset_registry:            Vec<AssetConfig>, // 6 assets
+    pub asset_registry: Vec<AssetConfig>, // 6 assets
 }
 
 impl GlobalConfig {
     // 8 disc + fields + Vec<AssetConfig> * 6 (~180 bytes each)
-    pub const LEN: usize = 8 + 32*5 + 1 + 8 + 8 + 1 + 8 + 32 + 4 + (6 * 200);
+    pub const LEN: usize = 8 + 32 * 5 + 1 + 8 + 8 + 1 + 8 + 32 + 4 + (6 * 200);
 }
 
+/// User Collateralized Debt Position (CDP)
+/// Each user can have one active position. Tracks debt and collateral value.
 #[account]
 pub struct UserPosition {
-    pub owner:               Pubkey,
-    pub debt:                u64, // BASKET debt (6 decimals)
-    pub last_liquidation_ts: i64,
-    pub bump:                u8,
+    pub owner: Pubkey,
+    pub debt: u64,             // BASKET tokens minted (owed)
+    pub collateral_value: u64, // Total value of collateral locked in micro-USD
+    pub cr_bps: u64,           // Current collateral ratio in basis points
+    pub bump: u8,
 }
 
 impl UserPosition {
-    pub const LEN: usize = 8 + 32 + 8 + 8 + 1;
+    pub const LEN: usize = 8 + 32 + 8 + 8 + 8 + 1;
+
+    pub fn collateral_ratio_bps(&self) -> u64 {
+        if self.debt == 0 {
+            return u64::MAX;
+        }
+
+        (self.collateral_value as u128)
+            .checked_mul(10_000)
+            .unwrap()
+            .checked_div(self.debt as u128)
+            .unwrap() as u64
+    }
 }

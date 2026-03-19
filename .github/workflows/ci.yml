@@ -1,0 +1,185 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, dev]
+  pull_request:
+    branches: [main, master, dev]
+
+env:
+  SOLANA_VERSION: "2.1.21"
+  ANCHOR_VERSION: "0.32.1"
+  NODE_VERSION: "22"
+  RUST_TOOLCHAIN: "1.85.0"
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Rust toolchain ────────────────────────────────────────────
+      - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Cache Cargo registry & build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      # ── Solana CLI ────────────────────────────────────────────────
+      - name: Install Solana CLI ${{ env.SOLANA_VERSION }}
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Generate local keypair
+        run: solana-keygen new --no-bip39-passphrase --silent
+
+      # ── Anchor CLI ───────────────────────────────────────────────
+      - name: Install Anchor CLI ${{ env.ANCHOR_VERSION }}
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v${{ env.ANCHOR_VERSION }} anchor-cli --locked
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
+      - name: Cache Anchor CLI binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/anchor
+          key: anchor-${{ env.ANCHOR_VERSION }}
+
+      # ── Node.js ──────────────────────────────────────────────────
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # ── Build ────────────────────────────────────────────────────
+      - name: Build Anchor programs
+        run: anchor build
+
+      # ── Test ─────────────────────────────────────────────────────
+      - name: Run all tests
+        run: anchor test --skip-build
+        env:
+          ANCHOR_WALLET: ${{ github.workspace }}/keypair.json
+
+      - name: Run BasketVault unit tests
+        run: cargo test -p basket-vault
+
+      # ── Upload IDL artifacts ──────────────────────────────────────
+      - name: Upload IDL artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: idl
+          path: target/idl/
+          retention-days: 30
+
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check SDK
+        run: |
+          cd sdk/core
+          npx tsc --noEmit
+
+      - name: Type-check CLI
+        run: |
+          cd cli
+          npx tsc --noEmit
+
+      - name: Type-check backend
+        run: |
+          cd backend
+          npx tsc --noEmit
+
+  rust-lint:
+    name: Rust Clippy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: clippy
+
+      - name: Cache Cargo artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  fuzz-check:
+    name: Fuzz Targets Compile
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Install Trident CLI
+        run: cargo install trident-cli --locked
+
+      - name: Cache Cargo artifacts (fuzz)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            trident-tests/target
+          key: ${{ runner.os }}-fuzz-${{ hashFiles('trident-tests/**/Cargo.lock') }}
+
+      - name: Check fuzz target compiles
+        # Verify the fuzz harness builds without errors.
+        # We do NOT run the fuzzer in CI (it needs hours to be useful);
+        # instead we gate on a successful cargo check so type errors and
+        # missing invariant functions are caught on every PR.
+        run: |
+          cd trident-tests
+          cargo check --manifest-path fuzz_tests/fuzz_0/Cargo.toml

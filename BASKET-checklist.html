@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BASKET — Launch Checklist</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f0f0d;
+    --bg2:       #161614;
+    --bg3:       #1e1e1b;
+    --border:    #2c2c28;
+    --border2:   #3a3a35;
+    --gold:      #c8a84b;
+    --gold-dim:  #7a6530;
+    --gold-glow: rgba(200,168,75,0.10);
+    --green:     #4caf7d;
+    --green-bg:  rgba(76,175,125,0.12);
+    --green-bdr: rgba(76,175,125,0.35);
+    --amber:     #e8943a;
+    --amber-bg:  rgba(232,148,58,0.12);
+    --amber-bdr: rgba(232,148,58,0.35);
+    --red:       #e05555;
+    --red-bg:    rgba(224,85,85,0.12);
+    --red-bdr:   rgba(224,85,85,0.35);
+    --blue:      #5b9bd5;
+    --blue-bg:   rgba(91,155,213,0.12);
+    --blue-bdr:  rgba(91,155,213,0.35);
+    --text:      #e2e0d6;
+    --text2:     #8a887e;
+    --text3:     #565450;
+    --mono:      'IBM Plex Mono', 'Courier New', monospace;
+    --sans:      'Syne', 'Segoe UI', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── Header ── */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* ── Progress ── */
+  .progress-wrap {
+    padding: 20px 32px 0;
+  }
+
+  .progress-track {
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 3px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.06em;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Layout ── */
+  .shell {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 32px 60px;
+  }
+
+  .summary-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.8;
+  }
+
+  .summary-box b { color: var(--text); font-weight: 500; }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: var(--bg2);
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+  }
+
+  .section-head:hover { background: var(--bg3); }
+
+  .section-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .section-icon {
+    font-size: 14px;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .section-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  .badge-blocker  { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-bdr); }
+  .badge-progress { background: var(--amber-bg);  color: var(--amber); border: 1px solid var(--amber-bdr); }
+  .badge-done     { background: var(--green-bg);  color: var(--green); border: 1px solid var(--green-bdr); }
+  .badge-neutral  { background: var(--bg3);       color: var(--text2); border: 1px solid var(--border); }
+
+  .chevron {
+    font-size: 10px;
+    color: var(--text3);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .section.open .chevron { transform: rotate(90deg); }
+
+  .section-body {
+    display: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .section.open .section-body { display: block; }
+
+  /* ── Items ── */
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .item:last-child { border-bottom: none; }
+  .item:hover { background: var(--bg3); }
+  .item.done  { background: rgba(76,175,125,0.05); }
+
+  .checkbox {
+    width: 17px;
+    height: 17px;
+    border-radius: 3px;
+    border: 1.5px solid var(--border2);
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+
+  .item.done .checkbox {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .checkmark {
+    display: none;
+    width: 9px;
+    height: 9px;
+  }
+
+  .item.done .checkmark { display: block; }
+
+  .item-content { flex: 1; }
+
+  .item-text {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+  }
+
+  .item.done .item-text { color: var(--text3); text-decoration: line-through; }
+
+  .item-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .tag-blocker  { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-bdr); }
+  .tag-judge    { background: var(--blue-bg);  color: var(--blue);  border: 1px solid var(--blue-bdr); }
+  .tag-quick    { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bdr); }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 7px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-gold {
+    background: var(--gold);
+    color: #0f0f0d;
+    font-weight: 500;
+  }
+
+  .btn-gold:hover { background: #d4b55c; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+  }
+
+  .btn-ghost:hover { border-color: var(--gold-dim); color: var(--text); }
+
+  /* ── Expand/collapse all ── */
+  .top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .action-link {
+    font-size: 11px;
+    color: var(--text3);
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    background: none;
+    border: none;
+    font-family: var(--mono);
+    text-decoration: underline;
+  }
+
+  .action-link:hover { color: var(--text2); }
+
+  /* ── Score panel ── */
+  .score-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .score-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+
+  .score-label {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .score-value {
+    font-family: var(--sans);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .score-sub {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  .score-value.red-val    { color: var(--red); }
+  .score-value.amber-val  { color: var(--amber); }
+  .score-value.green-val  { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <span class="logo-mark">BASKET</span>
+    <span class="logo-sub">Launch Readiness Checklist</span>
+  </div>
+  <div class="controls">
+    <button class="btn btn-ghost" onclick="expandAll()">Expand all</button>
+    <button class="btn btn-ghost" onclick="collapseAll()">Collapse all</button>
+    <button class="btn btn-gold" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<div class="progress-wrap" style="max-width:860px;margin:0 auto;padding:20px 32px 0">
+  <div class="progress-track">
+    <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+  </div>
+  <div class="progress-label">
+    <span id="prog-text">0 / 0 complete</span>
+    <span id="prog-pct">0%</span>
+  </div>
+</div>
+
+<div class="shell">
+
+  <div class="summary-box">
+    Click each item to check it off. Progress saves in this browser tab.
+    <b>Red BLOCKER</b> = judges will disqualify or heavily dock points — fix these first.
+    <b>Blue JUDGE SEES</b> = directly evaluated during judging.
+    <b>Amber 5 MIN FIX</b> = quick wins that improve quality.
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Blocker — fix first</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Judge sees — scored</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> 5-min fix — polish</div>
+  </div>
+
+  <div class="score-panel">
+    <div class="score-card">
+      <div class="score-label">Blockers cleared</div>
+      <div class="score-value red-val" id="sc-blockers">0/0</div>
+      <div class="score-sub">Must be 100% to ship</div>
+    </div>
+    <div class="score-card">
+      <div class="score-label">Judge items done</div>
+      <div class="score-value amber-val" id="sc-judge">0/0</div>
+      <div class="score-sub">Directly scored</div>
+    </div>
+    <div class="score-card">
+      <div class="score-label">Overall complete</div>
+      <div class="score-value green-val" id="sc-total">0%</div>
+      <div class="score-sub">All 74 checkpoints</div>
+    </div>
+  </div>
+
+  <div class="top-actions">
+    <span style="font-size:11px;color:var(--text3)">74 checkpoints across 9 sections</span>
+    <div style="display:flex;gap:12px">
+      <button class="action-link" onclick="showBlockersOnly()">Show blockers only</button>
+      <button class="action-link" onclick="showAll()">Show all</button>
+    </div>
+  </div>
+
+  <div id="checklist"></div>
+
+</div>
+
+<script>
+const DATA = [
+  {
+    id:"eligibility", icon:"⚠", title:"Eligibility — disqualification if missed",
+    items:[
+      { t:"Token launched on DeAura (required by bounty rules — no exceptions)", tags:["blocker"] },
+      { t:"$200,000 in trading volume reached or clear credible plan before judging", tags:["blocker"] },
+      { t:"Reused code (SSS SDK + SVS-1) disclosed in README and submission notes", tags:["blocker"] },
+      { t:"No wash trading — all volume is organic or from genuine liquidity provision", tags:["blocker"] },
+    ]
+  },
+  {
+    id:"submission", icon:"📦", title:"Submission package — what judges actually receive",
+    items:[
+      { t:"Working MVP deployed on Solana devnet (not just localnet)", tags:["blocker","judge"] },
+      { t:"Frontend accessible via public URL (or clearly shown via localhost in demo video)", tags:["judge"] },
+      { t:"DeAura token launch link included in submission form", tags:["blocker","judge"] },
+      { t:"README covers: what it is, architecture, oracle strategy, reused code disclosure", tags:["judge"] },
+      { t:"Demo video 2–3 min: wallet connect → deposit → mint → CR display → redeem", tags:["judge"] },
+      { t:"Pitch (deck or written): problem, solution, token utility, fee model, launch plan", tags:["judge"] },
+    ]
+  },
+  {
+    id:"program", icon:"⚙", title:"Rust program — does it actually compile and deploy?",
+    items:[
+      { t:"anchor build completes with zero errors", tags:["blocker"] },
+      { t:"anchor test passes — all 6 tests green", tags:["judge"] },
+      { t:"declare_id! in lib.rs matches the deployed program ID on devnet", tags:["blocker"] },
+      { t:"SSS CPI discriminator verified against real SSS IDL (not the placeholder bytes from this repo)", tags:["blocker"] },
+      { t:"SVS-1 CPI discriminator verified against real SVS-1 IDL", tags:["blocker"] },
+      { t:"anchor deploy succeeds on devnet without errors", tags:["judge"] },
+      { t:"scripts/deploy.ts runs cleanly (GlobalConfig PDA created on-chain)", tags:["judge"] },
+      { t:"scripts/init-vaults.ts creates a SVS-1 vault for each of the 6 collateral assets", tags:["judge"] },
+      { t:"Vault authority PDA is set as mint authority for BASKET mint — verify with: spl-token display <BASKET_MINT>", tags:["blocker"] },
+    ]
+  },
+  {
+    id:"coreflow", icon:"🔄", title:"Core protocol flow — can a user actually mint BASKET?",
+    items:[
+      { t:"User can deposit test PAXG into SVS-1 vault on devnet — transaction confirms", tags:["judge"] },
+      { t:"SVS-1 vault total_assets increases after deposit (check on-chain account data)", tags:["judge"] },
+      { t:"mint_basket instruction executes successfully on devnet end-to-end", tags:["blocker"] },
+      { t:"User receives BASKET tokens in wallet after mint (check with spl-token accounts)", tags:["blocker"] },
+      { t:"Mint correctly rejects when collateral is insufficient (UnderCollateralized error returned)", tags:["judge"] },
+      { t:"Adaptive CR changes based on BTC conf/price — verify at 3 different volatility levels", tags:["judge"] },
+      { t:"redeem_basket burns BASKET and returns collateral from SVS-1 vaults successfully", tags:["judge"] },
+      { t:"Insurance fund balance in GlobalConfig increases by 0.1% after each mint and redeem", tags:["judge"] },
+      { t:"Emergency mode: set_emergency_mode(true) blocks new mints but allows withdrawals", tags:["judge"] },
+    ]
+  },
+  {
+    id:"oracles", icon:"📡", title:"Oracle integration — prices are real, not mocked",
+    items:[
+      { t:"Pyth PriceUpdateV2 accounts fetched for all 6 assets on devnet (check in test logs)", tags:["judge"] },
+      { t:"Price normalization to 6 decimals is correct — log price in test mint, verify value looks right", tags:["judge"] },
+      { t:"Staleness check fires correctly — test with a price account older than 60 seconds", tags:["quick"] },
+      { t:"Switchboard aggregator account readable on devnet for at least 1 collateral asset", tags:["quick"] },
+      { t:"Oracle spread check rejects when Pyth and Switchboard disagree by more than 1.5%", tags:["quick"] },
+      { t:"Frontend shows live Pyth prices updating every ~3 seconds via Hermes WebSocket", tags:["judge"] },
+    ]
+  },
+  {
+    id:"frontend", icon:"🖥", title:"Frontend — judges will click through every tab",
+    items:[
+      { t:"Phantom wallet connects on devnet without console errors", tags:["judge"] },
+      { t:"Deposit tab: asset selector, amount input, and USD preview all work correctly", tags:["judge"] },
+      { t:"Mint tab: CR ratio display reads from real on-chain GlobalConfig state", tags:["judge"] },
+      { t:"Mint tab: adaptive CR badge changes color and label correctly (Normal / Elevated / Crisis)", tags:["judge"] },
+      { t:"Mint tab: clicking Mint fires a real Solana transaction — not just a setTimeout mock", tags:["blocker"] },
+      { t:"Redeem tab: burn + redeem flow completes end-to-end with real transaction", tags:["judge"] },
+      { t:"Basket weight bars reflect actual percentages from GlobalConfig.asset_registry", tags:["quick"] },
+      { t:"Oracle status chips show real Pyth and Switchboard feed ages — not hardcoded strings", tags:["quick"] },
+      { t:"Transaction success messages link to correct Solscan devnet explorer pages", tags:["quick"] },
+      { t:"Zero console errors when wallet is connected and all program accounts exist", tags:["quick"] },
+    ]
+  },
+  {
+    id:"constants", icon:"🔑", title:"Constants and config — most common source of silent failures",
+    items:[
+      { t:"BASKET_VAULT_PROGRAM_ID in constants.ts matches the deployed BasketVault program", tags:["blocker"] },
+      { t:"SSS_PROGRAM_ID in constants.ts matches the deployed SSS stablecoin program", tags:["blocker"] },
+      { t:"SVS1_PROGRAM_ID in constants.ts matches the deployed SVS-1 vault program", tags:["blocker"] },
+      { t:"BASKET_MINT in constants.ts matches the real BASKET mint address", tags:["blocker"] },
+      { t:"All 6 entries in ASSET_MINTS updated to real devnet test token mint addresses", tags:["blocker"] },
+      { t:"All 6 entries in SVS_VAULTS updated with addresses printed by init-vaults.ts", tags:["blocker"] },
+      { t:"PYTH_ACCOUNTS updated with real devnet PriceUpdateV2 account pubkeys", tags:["blocker"] },
+    ]
+  },
+  {
+    id:"pitch", icon:"🎯", title:"Pitch — how you present it to judges and investors",
+    items:[
+      { t:"Can explain what BASKET is in one sentence without using the word 'stablecoin'", tags:["judge"] },
+      { t:"Can answer: why adaptive CR beats fixed CR? (automatic, no governance delay, tightens in milliseconds)", tags:["judge"] },
+      { t:"Can answer: why Pyth as primary oracle, not Chainlink? (zero latency, free reads, already on-chain)", tags:["judge"] },
+      { t:"Can answer: what makes this different from sDAI or FRAX? (multi-commodity basket + adaptive CR)", tags:["judge"] },
+      { t:"Can answer: what is the BRICS story? (neutral settlement unit for cross-border commodity trades)", tags:["judge"] },
+      { t:"Token utility clearly explained: what BASKET is needed for beyond speculation", tags:["judge"] },
+      { t:"Fee model explained: 0.1% of every mint and burn flows to insurance fund for bad debt coverage", tags:["judge"] },
+      { t:"Launch plan is specific: DeAura listing → Jupiter integration → Orca liquidity pool", tags:["judge"] },
+    ]
+  },
+  {
+    id:"video", icon:"🎬", title:"Demo video — 2 minutes max, judges watch this first",
+    items:[
+      { t:"Opens with the problem in one sentence — no more than 10 seconds of context", tags:["judge"] },
+      { t:"Shows wallet connect on devnet Phantom", tags:["judge"] },
+      { t:"Shows deposit of real test collateral into SVS-1 vault with transaction confirmation", tags:["judge"] },
+      { t:"Shows live CR ratio updating on screen after the deposit", tags:["judge"] },
+      { t:"Shows mint transaction signing and BASKET appearing in wallet", tags:["judge"] },
+      { t:"Shows the adaptive CR badge — ideally it switches regime during the recording", tags:["judge"] },
+      { t:"Shows redeem flow: BASKET burns, collateral returns to wallet", tags:["judge"] },
+      { t:"Ends with the launch plan: DeAura link visible, $200k volume target stated", tags:["judge"] },
+      { t:"No background music, clear screen recording, no buffering pauses in the video", tags:["quick"] },
+    ]
+  },
+];
+
+const state = {};
+
+function tagClass(tag) {
+  if(tag==="blocker") return "tag-blocker";
+  if(tag==="judge")   return "tag-judge";
+  if(tag==="quick")   return "tag-quick";
+  return "";
+}
+
+function tagLabel(tag) {
+  if(tag==="blocker") return "BLOCKER";
+  if(tag==="judge")   return "JUDGE SEES";
+  if(tag==="quick")   return "5 MIN FIX";
+  return "";
+}
+
+function countAll() {
+  let total=0, done=0, blockers=0, blockersDone=0, judges=0, judgesDone=0;
+  DATA.forEach(sec => {
+    sec.items.forEach((item, i) => {
+      total++;
+      const key = sec.id+"-"+i;
+      const checked = !!state[key];
+      if(checked) done++;
+      const isBlocker = item.tags.includes("blocker");
+      const isJudge   = item.tags.includes("judge");
+      if(isBlocker) { blockers++; if(checked) blockersDone++; }
+      if(isJudge)   { judges++;   if(checked) judgesDone++;   }
+    });
+  });
+  return { total, done, blockers, blockersDone, judges, judgesDone };
+}
+
+function sectionCount(secId) {
+  const sec = DATA.find(s=>s.id===secId);
+  if(!sec) return [0,0];
+  const total = sec.items.length;
+  const done  = sec.items.filter((_,i)=>state[secId+"-"+i]).length;
+  return [done, total];
+}
+
+function getBadgeClass(done, total, isBlocker) {
+  if(isBlocker) return "badge-blocker";
+  if(done===total) return "badge-done";
+  if(done>0)       return "badge-progress";
+  return "badge-neutral";
+}
+
+function updateAll() {
+  const { total, done, blockers, blockersDone, judges, judgesDone } = countAll();
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+
+  document.getElementById("prog-fill").style.width = pct+"%";
+  document.getElementById("prog-text").textContent = done+" / "+total+" complete";
+  document.getElementById("prog-pct").textContent  = pct+"%";
+
+  document.getElementById("sc-blockers").textContent = blockersDone+"/"+blockers;
+  document.getElementById("sc-judge").textContent    = judgesDone+"/"+judges;
+  document.getElementById("sc-total").textContent    = pct+"%";
+
+  const bEl = document.getElementById("sc-blockers");
+  bEl.className = "score-value " + (blockersDone===blockers ? "green-val" : "red-val");
+
+  DATA.forEach(sec => {
+    const [d,t] = sectionCount(sec.id);
+    const badgeEl = document.getElementById("badge-"+sec.id);
+    if(!badgeEl) return;
+    badgeEl.textContent = d+"/"+t;
+    const isBlockerSec = sec.items.some(i=>i.tags.includes("blocker"));
+    badgeEl.className = "section-badge " + getBadgeClass(d, t, false);
+    if(d===t) badgeEl.className = "section-badge badge-done";
+    else if(d>0) badgeEl.className = "section-badge badge-progress";
+    else if(isBlockerSec) badgeEl.className = "section-badge badge-blocker";
+    else badgeEl.className = "section-badge badge-neutral";
+  });
+}
+
+function toggleItem(secId, idx) {
+  const key = secId+"-"+idx;
+  state[key] = !state[key];
+  const el = document.getElementById("item-"+secId+"-"+idx);
+  if(state[key]) el.classList.add("done");
+  else           el.classList.remove("done");
+  updateAll();
+}
+
+function toggleSection(secId) {
+  const sec = document.getElementById("sec-"+secId);
+  sec.classList.toggle("open");
+}
+
+function expandAll() {
+  document.querySelectorAll(".section").forEach(s=>s.classList.add("open"));
+}
+
+function collapseAll() {
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("open"));
+}
+
+function resetAll() {
+  Object.keys(state).forEach(k=>delete state[k]);
+  document.querySelectorAll(".item.done").forEach(el=>el.classList.remove("done"));
+  updateAll();
+}
+
+function showBlockersOnly() {
+  document.querySelectorAll(".item").forEach(el => {
+    const hasBlocker = el.querySelector(".tag-blocker");
+    el.style.display = hasBlocker ? "" : "none";
+  });
+  expandAll();
+}
+
+function showAll() {
+  document.querySelectorAll(".item").forEach(el => el.style.display = "");
+}
+
+function render() {
+  const container = document.getElementById("checklist");
+  container.innerHTML = DATA.map(sec => {
+    const isBlockerSec = sec.items.some(i=>i.tags.includes("blocker"));
+    const [d,t] = sectionCount(sec.id);
+
+    const items = sec.items.map((item, i) => {
+      const key = sec.id+"-"+i;
+      const tags = item.tags.map(tag =>
+        `<span class="tag ${tagClass(tag)}">${tagLabel(tag)}</span>`
+      ).join("");
+      return `<div class="item" id="item-${sec.id}-${i}" onclick="toggleItem('${sec.id}',${i})">
+        <div class="checkbox">
+          <svg class="checkmark" viewBox="0 0 10 10" fill="none">
+            <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="item-content">
+          <div class="item-text">${item.t}</div>
+          <div class="item-tags">${tags}</div>
+        </div>
+      </div>`;
+    }).join("");
+
+    const badgeClass = isBlockerSec ? "badge-blocker" : "badge-neutral";
+
+    return `<div class="section open" id="sec-${sec.id}">
+      <div class="section-head" onclick="toggleSection('${sec.id}')">
+        <div class="section-left">
+          <span class="section-icon">${sec.icon}</span>
+          <span class="section-title">${sec.title}</span>
+        </div>
+        <span class="section-badge ${badgeClass}" id="badge-${sec.id}">${d}/${t}</span>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">${items}</div>
+    </div>`;
+  }).join("");
+
+  updateAll();
+}
+
+render();
+</script>
+</body>
+</html>

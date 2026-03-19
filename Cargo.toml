@@ -1,11 +1,23 @@
 [workspace]
-members = ["programs/*"]
+members = [
+    "programs/basket-vault",
+    "modules/sss-common",
+]
+exclude = [
+    "trident-tests",
+    "programs/sss-stablecoin",
+    "programs/sss-transfer-hook",
+    "programs/sss-oracle",
+]
 resolver = "2"
+
+[workspace.dependencies]
+anchor-lang = "0.29"
+anchor-spl = "0.29"
 
 [profile.release]
 overflow-checks = true
-lto = "fat"
-codegen-units = 1
+lto = "thin"
 
 [profile.release.build-override]
 opt-level = 3

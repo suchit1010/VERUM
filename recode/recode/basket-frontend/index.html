@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BASKET — World Reserve Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0a08;
+    --bg2:       #111110;
+    --bg3:       #1a1a18;
+    --border:    #2a2a27;
+    --border2:   #3a3a36;
+    --gold:      #c8a84b;
+    --gold-dim:  #7a6530;
+    --gold-glow: rgba(200,168,75,0.12);
+    --amber:     #e8943a;
+    --green:     #4caf7d;
+    --red:       #e05555;
+    --text:      #e8e6de;
+    --text2:     #8a887e;
+    --text3:     #5a5850;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'Syne', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* ── Layout ─────────────────────────────────────── */
+
+  .shell {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+
+  .logo-tag {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.06em;
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%,100% { opacity:1 } 50% { opacity:0.5 }
+  }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-connect {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 9px 20px;
+    border-radius: 2px;
+  }
+  .btn-connect:hover { background: var(--gold-glow); border-color: var(--gold); }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--bg);
+    padding: 14px 28px;
+    border-radius: 2px;
+    font-weight: 500;
+    width: 100%;
+    font-size: 13px;
+  }
+  .btn-primary:hover { background: #d4b55c; }
+  .btn-primary:disabled { background: var(--border2); color: var(--text3); cursor: not-allowed; }
+
+  /* ── Ticker ─────────────────────────────────────── */
+
+  .ticker-bar {
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    overflow: hidden;
+  }
+
+  .ticker-inner {
+    display: flex;
+    gap: 40px;
+    animation: ticker-scroll 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes ticker-scroll {
+    0% { transform: translateX(0) }
+    100% { transform: translateX(-50%) }
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .ticker-name { color: var(--text3); letter-spacing: 0.06em; }
+  .ticker-price { color: var(--text); font-weight: 500; }
+  .ticker-change { font-size: 10px; }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+
+  /* ── Main grid ──────────────────────────────────── */
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    min-height: calc(100vh - 130px);
+  }
+
+  /* ── Left panel ─────────────────────────────────── */
+
+  .left-panel {
+    border-right: 1px solid var(--border);
+    padding: 32px 32px 32px 0;
+  }
+
+  /* ── Panel heading ──────────────────────────────── */
+
+  .panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .panel-title {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .panel-hint {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── CR Gauge ───────────────────────────────────── */
+
+  .cr-display {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cr-display::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold) 0%, transparent 100%);
+  }
+
+  .cr-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .cr-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .cr-value {
+    font-family: var(--sans);
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--green);
+    transition: color 0.4s;
+  }
+
+  .cr-value.elevated { color: var(--amber); }
+  .cr-value.crisis   { color: var(--red); }
+
+  .cr-value span {
+    font-size: 22px;
+    font-weight: 400;
+    margin-left: 2px;
+    color: var(--text2);
+  }
+
+  .cr-mode-badge {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    background: rgba(76,175,125,0.15);
+    color: var(--green);
+    border: 1px solid rgba(76,175,125,0.3);
+    transition: all 0.4s;
+  }
+
+  .cr-mode-badge.elevated {
+    background: rgba(232,148,58,0.15);
+    color: var(--amber);
+    border-color: rgba(232,148,58,0.3);
+  }
+
+  .cr-mode-badge.crisis {
+    background: rgba(224,85,85,0.15);
+    color: var(--red);
+    border-color: rgba(224,85,85,0.3);
+  }
+
+  /* CR bar */
+  .cr-bar-track {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .cr-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--green);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1), background 0.4s;
+    position: relative;
+  }
+
+  .cr-bar-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2));
+  }
+
+  .cr-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Basket weights ─────────────────────────────── */
+
+  .weights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .weight-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 14px 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .weight-card:hover { border-color: var(--border2); }
+
+  .weight-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--asset-color, var(--gold));
+    opacity: 0.6;
+  }
+
+  .weight-asset {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .weight-pct {
+    font-family: var(--sans);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .weight-bar {
+    height: 2px;
+    background: var(--bg3);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .weight-bar-fill {
+    height: 100%;
+    background: var(--asset-color, var(--gold));
+    border-radius: 1px;
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── Oracle status ──────────────────────────────── */
+
+  .oracle-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .oracle-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 7px 12px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text2);
+    flex: 1;
+  }
+
+  .oracle-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  .oracle-dot.warn { background: var(--amber); }
+  .oracle-dot.dead { background: var(--red); }
+
+  /* ── Vol proxy ──────────────────────────────────── */
+
+  .vol-display {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .vol-left { }
+
+  .vol-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .vol-value {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .vol-sublabel {
+    font-size: 9px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .vol-gauge {
+    width: 80px;
+    height: 40px;
+    position: relative;
+  }
+
+  .vol-gauge svg { overflow: visible; }
+
+  /* ── Stats row ──────────────────────────────────── */
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .stat-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-sub {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* ── Right panel (form) ─────────────────────────── */
+
+  .right-panel {
+    padding: 32px 0 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Step tabs */
+  .step-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .step-tab {
+    padding: 10px 0;
+    margin-right: 24px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    font-family: var(--mono);
+    background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .step-tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .step-num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text3);
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .step-tab.active .step-num {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .step-tab.done .step-num {
+    background: var(--green);
+    color: var(--bg);
+  }
+
+  /* Form panels */
+  .form-panel { display: none; }
+  .form-panel.active { display: block; }
+
+  /* Asset selector */
+  .asset-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .asset-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .asset-btn:hover { border-color: var(--border2); background: var(--bg3); }
+
+  .asset-btn.selected {
+    border-color: var(--gold);
+    background: var(--gold-glow);
+  }
+
+  .asset-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .asset-info { }
+
+  .asset-symbol {
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .asset-name {
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+    margin-top: 1px;
+  }
+
+  /* Amount input */
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  .input-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .input-label span { color: var(--gold); cursor: pointer; }
+  .input-label span:hover { text-decoration: underline; }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .amount-input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 70px 14px 16px;
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .amount-input:focus { border-color: var(--gold); }
+  .amount-input::placeholder { color: var(--text3); font-size: 14px; }
+
+  .input-suffix {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.06em;
+  }
+
+  /* Deposit preview */
+  .preview-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 11px;
+  }
+
+  .preview-row:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 9px;
+    margin-bottom: 4px;
+  }
+
+  .preview-key { color: var(--text3); letter-spacing: 0.05em; }
+  .preview-val { color: var(--text); font-weight: 500; }
+  .preview-val.good { color: var(--green); }
+  .preview-val.warn { color: var(--amber); }
+
+  /* Tx status */
+  .tx-status {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 3px;
+    margin-bottom: 16px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .tx-status.pending {
+    display: flex;
+    background: rgba(200,168,75,0.08);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+  }
+
+  .tx-status.success {
+    display: flex;
+    background: rgba(76,175,125,0.08);
+    border: 1px solid rgba(76,175,125,0.3);
+    color: var(--green);
+  }
+
+  .tx-status.error {
+    display: flex;
+    background: rgba(224,85,85,0.08);
+    border: 1px solid rgba(224,85,85,0.3);
+    color: var(--red);
+  }
+
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--gold-dim);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg) } }
+
+  /* Mint panel specifics */
+  .mint-ratio-live {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mint-ratio-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mint-ratio-value {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--green);
+  }
+
+  /* Connected state */
+  .wallet-addr {
+    font-size: 11px;
+    color: var(--gold);
+    background: var(--gold-glow);
+    border: 1px solid var(--gold-dim);
+    padding: 7px 14px;
+    border-radius: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Divider label ──────────────────────────────── */
+
+  .section-divider {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .section-divider::before,
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Scrollbar ──────────────────────────────────── */
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── Animations ─────────────────────────────────── */
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(8px) }
+    to   { opacity:1; transform:translateY(0) }
+  }
+
+  .fade-up { animation: fadeUp 0.3s ease both; }
+
+  .fade-up:nth-child(1) { animation-delay: 0.05s }
+  .fade-up:nth-child(2) { animation-delay: 0.1s }
+  .fade-up:nth-child(3) { animation-delay: 0.15s }
+  .fade-up:nth-child(4) { animation-delay: 0.2s }
+  .fade-up:nth-child(5) { animation-delay: 0.25s }
+  .fade-up:nth-child(6) { animation-delay: 0.3s }
+
+  /* ── Disconnect ─────────────────────────────────── */
+
+  #disconnected-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,8,0.88);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .connect-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 48px;
+    text-align: center;
+    max-width: 380px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .connect-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .connect-logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 36px;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .connect-sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .connect-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .wallet-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .wallet-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .wallet-option:hover { border-color: var(--gold-dim); background: var(--gold-glow); }
+
+  .wallet-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .connect-note {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+  }
+
+  /* ── Collateral summary ─────────────────────────── */
+
+  .collateral-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 11px;
+  }
+
+  .collateral-table th {
+    text-align: left;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    padding: 0 0 10px;
+    text-transform: uppercase;
+    font-size: 9px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .collateral-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: middle;
+  }
+
+  .collateral-table td:last-child { text-align: right; color: var(--text); }
+
+  .col-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<!-- Wallet connect overlay -->
+<div id="disconnected-overlay">
+  <div class="connect-card">
+    <div class="connect-logo">BASKET</div>
+    <div class="connect-sub">World Reserve Protocol</div>
+    <div class="connect-desc">
+      Deposit tokenized commodities, BTC, and RWAs.<br>
+      Mint BASKET — the neutral reserve currency<br>
+      backed by what the world actually runs on.
+    </div>
+    <div class="wallet-options">
+      <button class="wallet-option" onclick="connectWallet('phantom')">
+        <div class="wallet-icon" style="background:#ab9ff2;">👻</div>
+        Phantom
+      </button>
+      <button class="wallet-option" onclick="connectWallet('solflare')">
+        <div class="wallet-icon" style="background:#ff8c00;">🔆</div>
+        Solflare
+      </button>
+      <button class="wallet-option" onclick="connectWallet('backpack')">
+        <div class="wallet-icon" style="background:#e33e3f;">🎒</div>
+        Backpack
+      </button>
+    </div>
+    <div class="connect-note">
+      Devnet only — use test tokens · Unaudited MVP<br>
+      Built for Buildifi Hack 2 · March 2026
+    </div>
+  </div>
+</div>
+
+<!-- Main app -->
+<header>
+  <div class="shell">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-mark">BASKET</span>
+        <span class="logo-tag">World Reserve Protocol · Devnet</span>
+      </div>
+      <div class="header-right">
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          Live · Solana Devnet
+        </div>
+        <div class="wallet-addr" id="wallet-addr">Disconnected</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Ticker -->
+<div class="ticker-bar">
+  <div class="shell">
+    <div class="ticker-inner" id="ticker">
+      <!-- Duplicated for infinite scroll -->
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="shell">
+  <div class="main-grid">
+
+    <!-- Left: live protocol state -->
+    <div class="left-panel">
+
+      <!-- CR gauge -->
+      <div class="panel-heading">
+        <span class="panel-title">Collateral Ratio</span>
+        <span class="panel-hint">Updates on every tx</span>
+      </div>
+
+      <div class="cr-display fade-up">
+        <div class="cr-row">
+          <div>
+            <div class="cr-label">Current CR</div>
+            <div class="cr-value" id="cr-value">
+              217<span>%</span>
+            </div>
+          </div>
+          <div>
+            <div class="cr-label">Mode</div>
+            <div class="cr-mode-badge" id="cr-mode-badge">Normal · 150% min</div>
+          </div>
+        </div>
+        <div class="cr-bar-track">
+          <div class="cr-bar-fill" id="cr-bar" style="width: 60%;"></div>
+        </div>
+        <div class="cr-ticks">
+          <span>100%</span>
+          <span>↑ Liq. 120%</span>
+          <span>↑ Min 150%</span>
+          <span>200%</span>
+          <span>300%</span>
+          <span>400%</span>
+        </div>
+      </div>
+
+      <!-- Basket weights -->
+      <div class="panel-heading fade-up">
+        <span class="panel-title">Basket Weights</span>
+        <span class="panel-hint" id="last-rebalance">Last rebalance: —</span>
+      </div>
+
+      <div class="weights-grid">
+        <div class="weight-card fade-up" style="--asset-color: #c8a84b">
+          <div class="weight-asset">Gold · XAU</div>
+          <div class="weight-pct" id="w-gold">20%</div>
+          <div class="weight-bar"><div class="weight-bar-fill" id="wb-gold" style="width:20%"></div></div>
+        </div>
+        <div class="weight-card fade-up" style="--asset-color: #6a8fc8">
+          <div class="weight-asset">Crude Oil · WTI</div>
+          <div class="weight-pct" id="w-oil">25%</div>
+          <div class="weight-bar"><div class="weight-bar-fill" id="wb-oil" style="width:25%"></div></div>
+        </div>
+        <div class="weight-card fade-up" style="--asset-color: #e8943a">
+          <div class="weight-asset">Bitcoin · BTC</div>
+          <div class="weight-pct" id="w-btc">15%</div>
+          <div class="weight-bar"><div class="weight-bar-fill" id="wb-btc" style="width:15%"></div></div>
+        </div>
+        <div class="weight-card fade-up" style="--asset-color: #4caf7d">
+          <div class="weight-asset">Farm · XAG</div>
+          <div class="weight-pct" id="w-farm">15%</div>
+          <div class="weight-bar"><div class="weight-bar-fill" id="wb-farm" style="width:15%"></div></div>
+        </div>
+        <div class="weight-card fade-up" style="--asset-color: #9b8ac8">
+          <div class="weight-asset">DXY · Bonds</div>
+          <div class="weight-pct" id="w-dxy">15%</div>
+          <div class="weight-bar"><div class="weight-bar-fill" id="wb-dxy" style="width:15%"></div></div>
+        </div>
+        <div class="weight-card fade-up" style="--asset-color: #c86a6a">
+          <div class="weight-asset">RWAs</div>
+          <div class="weight-pct" id="w-rwa">10%</div>
+          <div class="weight-bar"><div class="weight-bar-fill" id="wb-rwa" style="width:10%"></div></div>
+        </div>
+      </div>
+
+      <!-- Oracle status -->
+      <div class="section-divider fade-up">Oracle Status</div>
+
+      <div class="oracle-row fade-up">
+        <div class="oracle-chip">
+          <div class="oracle-dot" id="pyth-dot"></div>
+          Pyth · Primary
+          <span style="margin-left:auto;color:var(--text3)" id="pyth-age">—</span>
+        </div>
+        <div class="oracle-chip">
+          <div class="oracle-dot" id="sb-dot"></div>
+          Switchboard · Fallback
+          <span style="margin-left:auto;color:var(--text3)" id="sb-age">—</span>
+        </div>
+        <div class="oracle-chip">
+          <div class="oracle-dot warn"></div>
+          Chainlink · Quarterly
+          <span style="margin-left:auto;color:var(--text3)">Scheduled</span>
+        </div>
+      </div>
+
+      <!-- BTC Vol proxy -->
+      <div class="vol-display fade-up">
+        <div class="vol-left">
+          <div class="vol-label">BTC Vol Proxy · conf/price</div>
+          <div class="vol-value" id="vol-value">0.12<span style="font-size:13px;color:var(--text2)"> bps</span></div>
+          <div class="vol-sublabel" id="vol-regime">Regime: Normal → min CR 150%</div>
+        </div>
+        <svg class="vol-gauge" viewBox="0 0 80 40" id="vol-svg">
+          <path d="M8 36 A34 34 0 0 1 72 36" fill="none" stroke="#2a2a27" stroke-width="6" stroke-linecap="round"/>
+          <path d="M8 36 A34 34 0 0 1 72 36" fill="none" stroke="#4caf7d" stroke-width="6" stroke-linecap="round"
+            stroke-dasharray="106.8" stroke-dashoffset="80" id="vol-arc"/>
+          <line x1="40" y1="36" x2="40" y2="8" stroke="#c8a84b" stroke-width="2" stroke-linecap="round"
+            id="vol-needle" transform-origin="40 36"/>
+        </svg>
+      </div>
+
+      <!-- Stats -->
+      <div class="section-divider fade-up">Protocol Stats</div>
+
+      <div class="stats-row fade-up">
+        <div class="stat-box">
+          <div class="stat-label">TVL</div>
+          <div class="stat-value" id="stat-tvl">$0</div>
+          <div class="stat-sub">Total collateral</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Circulating</div>
+          <div class="stat-value" id="stat-supply">0</div>
+          <div class="stat-sub">BASKET minted</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Ins. Fund</div>
+          <div class="stat-value" id="stat-insurance">$0</div>
+          <div class="stat-sub">0.1% fee buffer</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right: action panel -->
+    <div class="right-panel">
+
+      <!-- Step tabs -->
+      <div class="step-tabs">
+        <button class="step-tab active" id="tab-deposit" onclick="switchTab('deposit')">
+          <span class="step-num" id="sn-1">1</span> Deposit
+        </button>
+        <button class="step-tab" id="tab-mint" onclick="switchTab('mint')">
+          <span class="step-num" id="sn-2">2</span> Mint
+        </button>
+        <button class="step-tab" id="tab-redeem" onclick="switchTab('redeem')">
+          <span class="step-num" id="sn-3">3</span> Redeem
+        </button>
+      </div>
+
+      <!-- ── DEPOSIT PANEL ────────────────────────── -->
+      <div class="form-panel active" id="panel-deposit">
+
+        <div class="input-label" style="margin-bottom:10px">Select collateral asset</div>
+
+        <div class="asset-selector">
+          <button class="asset-btn selected" id="asset-paxg" onclick="selectAsset('PAXG')">
+            <div class="asset-icon" style="background:rgba(200,168,75,0.2)">🥇</div>
+            <div class="asset-info">
+              <div class="asset-symbol">PAXG</div>
+              <div class="asset-name">Tokenized Gold</div>
+            </div>
+          </button>
+          <button class="asset-btn" id="asset-wbtc" onclick="selectAsset('WBTC')">
+            <div class="asset-icon" style="background:rgba(232,148,58,0.2)">₿</div>
+            <div class="asset-info">
+              <div class="asset-symbol">WBTC</div>
+              <div class="asset-name">Wrapped Bitcoin</div>
+            </div>
+          </button>
+          <button class="asset-btn" id="asset-oil" onclick="selectAsset('OIL')">
+            <div class="asset-icon" style="background:rgba(106,143,200,0.2)">🛢</div>
+            <div class="asset-info">
+              <div class="asset-symbol">tOIL</div>
+              <div class="asset-name">Tokenized WTI</div>
+            </div>
+          </button>
+          <button class="asset-btn" id="asset-usdc" onclick="selectAsset('USDC')">
+            <div class="asset-icon" style="background:rgba(76,175,125,0.2)">◎</div>
+            <div class="asset-info">
+              <div class="asset-symbol">USDC</div>
+              <div class="asset-name">USD Coin</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="input-group">
+          <div class="input-label">
+            Amount
+            <span onclick="setMax()">MAX</span>
+          </div>
+          <div class="input-wrap">
+            <input
+              class="amount-input"
+              type="number"
+              id="deposit-amount"
+              placeholder="0.00"
+              oninput="updateDepositPreview()"
+            >
+            <span class="input-suffix" id="deposit-suffix">PAXG</span>
+          </div>
+        </div>
+
+        <!-- Deposit preview -->
+        <div class="preview-box">
+          <div class="preview-row">
+            <span class="preview-key">Asset price</span>
+            <span class="preview-val" id="p-price">$0.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">USD value</span>
+            <span class="preview-val" id="p-usd">$0.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">Basket weight</span>
+            <span class="preview-val" id="p-weight">—</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">New portfolio CR</span>
+            <span class="preview-val good" id="p-cr">—</span>
+          </div>
+        </div>
+
+        <!-- Tx status -->
+        <div class="tx-status" id="dep-status">
+          <div class="spinner" id="dep-spinner"></div>
+          <span id="dep-status-text">Processing...</span>
+        </div>
+
+        <button class="btn btn-primary" id="btn-deposit" onclick="doDeposit()">
+          Deposit Collateral
+        </button>
+
+        <!-- Collateral summary (after deposit) -->
+        <div id="collateral-summary" style="display:none;margin-top:24px">
+          <div class="section-divider">Your Positions</div>
+          <table class="collateral-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Amount</th>
+                <th style="text-align:right">USD Value</th>
+              </tr>
+            </thead>
+            <tbody id="collateral-tbody">
+            </tbody>
+          </table>
+          <div style="font-size:11px;color:var(--text2);display:flex;justify-content:space-between;padding-top:4px">
+            <span style="color:var(--text3)">Total deposited value</span>
+            <span id="total-collateral-value">$0.00</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── MINT PANEL ────────────────────────────── -->
+      <div class="form-panel" id="panel-mint">
+
+        <!-- Live CR -->
+        <div class="mint-ratio-live">
+          <div>
+            <div class="mint-ratio-label">Portfolio collateral ratio</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px" id="mint-cr-detail">
+              Min required: 150%
+            </div>
+          </div>
+          <div class="mint-ratio-value" id="mint-cr-display">—</div>
+        </div>
+
+        <div class="input-group">
+          <div class="input-label">
+            BASKET to mint
+            <span onclick="setMaxMint()">MAX SAFE</span>
+          </div>
+          <div class="input-wrap">
+            <input
+              class="amount-input"
+              type="number"
+              id="mint-amount"
+              placeholder="0.00"
+              oninput="updateMintPreview()"
+            >
+            <span class="input-suffix">BASKET</span>
+          </div>
+        </div>
+
+        <div class="preview-box">
+          <div class="preview-row">
+            <span class="preview-key">Collateral value</span>
+            <span class="preview-val" id="m-collateral">$0.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">BASKET value (1:1 USD)</span>
+            <span class="preview-val" id="m-basket-val">$0.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">CR after mint</span>
+            <span class="preview-val" id="m-cr-after">—</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">Protocol fee (0.1%)</span>
+            <span class="preview-val" id="m-fee">$0.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">You receive</span>
+            <span class="preview-val good" id="m-receive">0 BASKET</span>
+          </div>
+        </div>
+
+        <!-- Adaptive CR callout -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:12px 14px;margin-bottom:16px;font-size:10px;color:var(--text3);line-height:1.7;letter-spacing:0.03em">
+          <span style="color:var(--gold)">Adaptive CR</span> is currently
+          <span style="color:var(--text)" id="cr-callout-regime">NORMAL</span> ·
+          BTC conf/price = <span style="color:var(--text)" id="cr-callout-vol">0.12 bps</span> ·
+          Min CR = <span style="color:var(--green)" id="cr-callout-min">150%</span>
+        </div>
+
+        <div class="tx-status" id="mint-status">
+          <div class="spinner"></div>
+          <span id="mint-status-text">Processing...</span>
+        </div>
+
+        <button class="btn btn-primary" id="btn-mint" onclick="doMint()">
+          Mint BASKET
+        </button>
+
+      </div>
+
+      <!-- ── REDEEM PANEL ──────────────────────────── -->
+      <div class="form-panel" id="panel-redeem">
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:3px;padding:16px;margin-bottom:16px;font-size:11px;color:var(--text2);line-height:1.8">
+          Burn BASKET tokens to withdraw your pro-rata collateral.
+          You receive each asset proportional to basket weights.
+          Withdrawals are <span style="color:var(--green)">always open</span> — even in emergency mode.
+        </div>
+
+        <div class="input-group">
+          <div class="input-label">
+            BASKET to burn
+            <span onclick="setMaxRedeem()">MAX</span>
+          </div>
+          <div class="input-wrap">
+            <input
+              class="amount-input"
+              type="number"
+              id="redeem-amount"
+              placeholder="0.00"
+              oninput="updateRedeemPreview()"
+            >
+            <span class="input-suffix">BASKET</span>
+          </div>
+        </div>
+
+        <div class="preview-box">
+          <div class="preview-row">
+            <span class="preview-key">BASKET balance</span>
+            <span class="preview-val" id="r-balance">0 BASKET</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">USD value to receive</span>
+            <span class="preview-val" id="r-usd">$0.00</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-key">Protocol fee (0.1%)</span>
+            <span class="preview-val" id="r-fee">$0.00</span>
+          </div>
+        </div>
+
+        <div class="tx-status" id="redeem-status">
+          <div class="spinner"></div>
+          <span id="redeem-status-text">Processing...</span>
+        </div>
+
+        <button class="btn btn-primary" onclick="doRedeem()">
+          Burn &amp; Redeem
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Mock state — replace with real Solana program reads in production
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MOCK_PRICES = {
+  PAXG: 3142.50, WBTC: 67420.00, OIL: 78.40, USDC: 1.00,
+  XAG: 31.20, DXY: 104.20
+};
+
+const MOCK_WEIGHTS = { gold:20, oil:25, btc:15, farm:15, dxy:15, rwa:10 };
+
+const MOCK_BALANCES = { PAXG:0, WBTC:0, OIL:0, USDC:0 };
+const MOCK_MAX = { PAXG:2.5, WBTC:0.15, OIL:50.0, USDC:5000 };
+
+let state = {
+  connected: false,
+  walletAddress: null,
+  selectedAsset: 'PAXG',
+  deposits: {},           // { asset: amount }
+  totalCollateralUSD: 0,
+  basketMinted: 0,
+  basketBalance: 0,
+  currentCR: 0,
+  btcConfBps: 0.12,
+  insuranceFund: 0,
+  tvl: 0,
+};
+
+const ASSET_WEIGHTS = { PAXG:'gold', WBTC:'btc', OIL:'oil', USDC:'dxy' };
+const ASSET_WEIGHT_PCT = { PAXG:20, WBTC:15, OIL:25, USDC:15 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wallet connect (mock — swap for @solana/wallet-adapter in production)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function connectWallet(adapter) {
+  // Production: use wallet adapter to connect
+  // const wallet = useWallet(); await wallet.connect();
+  const mockAddr = 'Gk7Z...9mBf'; // truncated for display
+  state.connected = true;
+  state.walletAddress = mockAddr;
+
+  document.getElementById('disconnected-overlay').style.display = 'none';
+  document.getElementById('wallet-addr').textContent = mockAddr;
+
+  startLiveFeed();
+  updateAll();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Live oracle simulation (replace with Pyth WebSocket in production)
+// In production: new PriceServiceConnection('https://hermes.pyth.network')
+// ─────────────────────────────────────────────────────────────────────────────
+
+function startLiveFeed() {
+  // Simulate live price updates
+  setInterval(() => {
+    MOCK_PRICES.PAXG  += (Math.random() - 0.5) * 4;
+    MOCK_PRICES.WBTC  += (Math.random() - 0.5) * 120;
+    MOCK_PRICES.OIL   += (Math.random() - 0.5) * 0.4;
+    state.btcConfBps   = 0.05 + Math.random() * 0.25;
+
+    updateOracleStatus();
+    updateVolProxy();
+    updateTicker();
+    if (state.totalCollateralUSD > 0) {
+      recalcCR();
+      updateMintPreview();
+    }
+  }, 2500);
+
+  // Initial oracle status
+  updateOracleStatus();
+  updateVolProxy();
+  buildTicker();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CR calculation
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getAdaptiveCR() {
+  const v = state.btcConfBps;
+  if (v < 0.30) return { cr: 150, regime: 'Normal',   cls: '' };
+  if (v < 2.00) return { cr: 200, regime: 'Elevated', cls: 'elevated' };
+  return           { cr: 300, regime: 'Crisis',    cls: 'crisis' };
+}
+
+function recalcCR() {
+  if (state.basketMinted === 0) {
+    state.currentCR = state.totalCollateralUSD > 0 ? 9999 : 0;
+  } else {
+    state.currentCR = (state.totalCollateralUSD / state.basketMinted) * 100;
+  }
+  updateCRDisplay();
+}
+
+function updateCRDisplay() {
+  const cr = Math.round(state.currentCR);
+  const { cr: minCR, regime, cls } = getAdaptiveCR();
+
+  const crEl    = document.getElementById('cr-value');
+  const badgeEl = document.getElementById('cr-mode-badge');
+  const barEl   = document.getElementById('cr-bar');
+
+  crEl.innerHTML = cr > 9990 ? '∞<span>%</span>' : `${cr}<span>%</span>`;
+  crEl.className = 'cr-value' + (cls ? ' ' + cls : '');
+
+  badgeEl.textContent = `${regime} · ${minCR}% min`;
+  badgeEl.className   = 'cr-mode-badge' + (cls ? ' ' + cls : '');
+
+  // Bar: 0% = 100 CR, 100% = 400 CR
+  const barPct = Math.min(100, Math.max(0, (cr - 100) / 300 * 100));
+  barEl.style.width      = barPct + '%';
+  barEl.style.background = cls === 'crisis' ? 'var(--red)' : cls === 'elevated' ? 'var(--amber)' : 'var(--green)';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Oracle status display
+// ─────────────────────────────────────────────────────────────────────────────
+
+function updateOracleStatus() {
+  // Mock: Pyth always fresh, Switchboard slightly lagged
+  document.getElementById('pyth-dot').className = 'oracle-dot';
+  document.getElementById('sb-dot').className   = 'oracle-dot';
+  document.getElementById('pyth-age').textContent = `${(Math.random() * 2 + 0.5).toFixed(1)}s`;
+  document.getElementById('sb-age').textContent  = `${(Math.random() * 15 + 5).toFixed(0)}s`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vol proxy gauge
+// ─────────────────────────────────────────────────────────────────────────────
+
+function updateVolProxy() {
+  const v = state.btcConfBps;
+  const { cr, regime, cls } = getAdaptiveCR();
+
+  document.getElementById('vol-value').innerHTML =
+    `${v.toFixed(2)}<span style="font-size:13px;color:var(--text2)"> bps</span>`;
+  document.getElementById('vol-regime').textContent =
+    `Regime: ${regime} → min CR ${cr}%`;
+
+  // Arc: 0 bps = 0deg, 3.0 bps = 180deg
+  const pct  = Math.min(1, v / 3.0);
+  const dash = 106.8;
+  const fill = pct * dash;
+  const arc  = document.getElementById('vol-arc');
+  arc.setAttribute('stroke-dashoffset', (dash - fill).toString());
+  arc.setAttribute('stroke', cls === 'crisis' ? '#e05555' : cls === 'elevated' ? '#e8943a' : '#4caf7d');
+
+  // Needle: -90deg (left) = 0, 90deg (right) = max
+  const angle = -90 + pct * 180;
+  document.getElementById('vol-needle').setAttribute('transform', `rotate(${angle}, 40, 36)`);
+
+  // Update callouts
+  document.getElementById('cr-callout-regime').textContent = regime.toUpperCase();
+  document.getElementById('cr-callout-vol').textContent    = `${v.toFixed(2)} bps`;
+  document.getElementById('cr-callout-min').textContent    = `${cr}%`;
+  document.getElementById('mint-cr-detail').textContent    = `Min required: ${cr}%`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ticker
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TICKER_DATA = [
+  { name:'XAU/USD', key:'PAXG',  change:+0.42 },
+  { name:'WTI/USD', key:'OIL',   change:-0.18 },
+  { name:'BTC/USD', key:'WBTC',  change:+1.23 },
+  { name:'XAG/USD', key:'XAG',   change:+0.07 },
+  { name:'DXY',     key:'DXY',   change:-0.11 },
+];
+
+function buildTicker() { updateTicker(); }
+
+function updateTicker() {
+  const items = [...TICKER_DATA, ...TICKER_DATA].map(t => {
+    const price  = MOCK_PRICES[t.key] ?? 0;
+    const chgCls = t.change >= 0 ? 'up' : 'down';
+    const chgStr = (t.change >= 0 ? '+' : '') + t.change.toFixed(2) + '%';
+    return `<div class="ticker-item">
+      <span class="ticker-name">${t.name}</span>
+      <span class="ticker-price">$${price.toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+      <span class="ticker-change ${chgCls}">${chgStr}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('ticker').innerHTML = items;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deposit flow
+// ─────────────────────────────────────────────────────────────────────────────
+
+function selectAsset(asset) {
+  state.selectedAsset = asset;
+  document.querySelectorAll('.asset-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('asset-' + asset.toLowerCase()).classList.add('selected');
+  document.getElementById('deposit-suffix').textContent = asset === 'OIL' ? 'tOIL' : asset;
+  updateDepositPreview();
+}
+
+function setMax() {
+  const max = MOCK_MAX[state.selectedAsset] || 0;
+  document.getElementById('deposit-amount').value = max;
+  updateDepositPreview();
+}
+
+function updateDepositPreview() {
+  const amt    = parseFloat(document.getElementById('deposit-amount').value) || 0;
+  const price  = MOCK_PRICES[state.selectedAsset] || 1;
+  const usdVal = amt * price;
+  const weight = ASSET_WEIGHT_PCT[state.selectedAsset] || 0;
+
+  const newTotal  = state.totalCollateralUSD + usdVal;
+  const newCR     = state.basketMinted > 0
+    ? (newTotal / state.basketMinted * 100).toFixed(0) + '%'
+    : '∞';
+
+  document.getElementById('p-price').textContent  = '$' + price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('p-usd').textContent    = '$' + usdVal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('p-weight').textContent = weight + '% of basket';
+  document.getElementById('p-cr').textContent     = newCR;
+}
+
+async function doDeposit() {
+  const amt = parseFloat(document.getElementById('deposit-amount').value) || 0;
+  if (!amt) return;
+
+  const btn = document.getElementById('btn-deposit');
+  const statusEl = document.getElementById('dep-status');
+  const statusTextEl = document.getElementById('dep-status-text');
+
+  // Pending state
+  btn.disabled = true;
+  statusEl.className = 'tx-status pending';
+  statusTextEl.textContent = 'Sending transaction...';
+
+  // Simulate tx — in production:
+  // await program.methods.depositCollateral(new BN(amount)).accounts({...}).rpc()
+  await sleep(1800);
+
+  // Simulate confirm
+  statusTextEl.textContent = 'Confirming...';
+  await sleep(800);
+
+  // Success
+  const price   = MOCK_PRICES[state.selectedAsset] || 1;
+  const usdVal  = amt * price;
+
+  state.deposits[state.selectedAsset] = (state.deposits[state.selectedAsset] || 0) + amt;
+  state.totalCollateralUSD += usdVal;
+  state.tvl                 = state.totalCollateralUSD;
+
+  recalcCR();
+  updateStats();
+  updateCollateralSummary();
+
+  statusEl.className = 'tx-status success';
+  statusTextEl.textContent = `✓ Deposited ${amt} ${state.selectedAsset} · View on Solscan ↗`;
+
+  btn.disabled = false;
+
+  // Mark step 1 done
+  document.getElementById('sn-1').style.background = 'var(--green)';
+  document.getElementById('sn-1').style.color      = 'var(--bg)';
+}
+
+function updateCollateralSummary() {
+  const tbody = document.getElementById('collateral-tbody');
+  const colors = { PAXG:'#c8a84b', WBTC:'#e8943a', OIL:'#6a8fc8', USDC:'#4caf7d' };
+  let rows = '';
+  let total = 0;
+
+  for (const [asset, amt] of Object.entries(state.deposits)) {
+    if (!amt) continue;
+    const price  = MOCK_PRICES[asset] || 1;
+    const usdVal = amt * price;
+    total += usdVal;
+    rows += `<tr>
+      <td><span class="col-dot" style="background:${colors[asset]}"></span>${asset}</td>
+      <td>${amt.toFixed(4)}</td>
+      <td>$${usdVal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>`;
+  }
+
+  tbody.innerHTML = rows;
+  document.getElementById('total-collateral-value').textContent =
+    '$' + total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  document.getElementById('collateral-summary').style.display =
+    Object.keys(state.deposits).length ? 'block' : 'none';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mint flow
+// ─────────────────────────────────────────────────────────────────────────────
+
+function setMaxMint() {
+  const { cr: minCR } = getAdaptiveCR();
+  // Max safe = collateral / minCR * 100 - existing minted
+  const maxSafe = (state.totalCollateralUSD / minCR * 100) - state.basketMinted;
+  document.getElementById('mint-amount').value = Math.max(0, maxSafe * 0.95).toFixed(2);
+  updateMintPreview();
+}
+
+function updateMintPreview() {
+  const { cr: minCR } = getAdaptiveCR();
+  const desired = parseFloat(document.getElementById('mint-amount').value) || 0;
+  const fee     = desired * 0.001;
+  const receive = desired - fee;
+
+  const newMinted  = state.basketMinted + desired;
+  const crAfter    = newMinted > 0 ? (state.totalCollateralUSD / newMinted * 100).toFixed(0) : '∞';
+  const crAfterNum = parseFloat(crAfter);
+
+  document.getElementById('m-collateral').textContent =
+    '$' + state.totalCollateralUSD.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('m-basket-val').textContent  = '$' + desired.toFixed(2);
+  document.getElementById('m-fee').textContent         = '$' + fee.toFixed(4);
+  document.getElementById('m-receive').textContent     = receive.toFixed(4) + ' BASKET';
+
+  const crEl  = document.getElementById('m-cr-after');
+  crEl.textContent = crAfter === '∞' ? '∞' : crAfter + '%';
+  crEl.className   = 'preview-val ' + (crAfterNum >= minCR ? 'good' : 'warn');
+
+  document.getElementById('mint-cr-display').textContent =
+    state.currentCR > 9990 ? '∞' : Math.round(state.currentCR) + '%';
+}
+
+async function doMint() {
+  const desired = parseFloat(document.getElementById('mint-amount').value) || 0;
+  if (!desired) return;
+
+  const { cr: minCR } = getAdaptiveCR();
+  const newMinted = state.basketMinted + desired;
+  const crAfter   = state.totalCollateralUSD / newMinted * 100;
+
+  if (crAfter < minCR) {
+    const statusEl = document.getElementById('mint-status');
+    statusEl.className = 'tx-status error';
+    document.getElementById('mint-status-text').textContent =
+      `CR would be ${crAfter.toFixed(0)}% — below min ${minCR}% · Deposit more collateral`;
+    return;
+  }
+
+  const btn      = document.getElementById('btn-mint');
+  const statusEl = document.getElementById('mint-status');
+  const stTxt    = document.getElementById('mint-status-text');
+
+  btn.disabled = true;
+  statusEl.className = 'tx-status pending';
+  stTxt.textContent  = 'Building transaction...';
+
+  await sleep(900);
+  stTxt.textContent = 'Fetching Pyth prices...';
+  await sleep(700);
+  stTxt.textContent = 'Verifying CR gate...';
+  await sleep(600);
+  stTxt.textContent = 'CPI to SSS mint...';
+  await sleep(900);
+
+  // Success
+  const fee = desired * 0.001;
+  state.basketMinted  += desired;
+  state.basketBalance += desired - fee;
+  state.insuranceFund += fee;
+  recalcCR();
+  updateStats();
+  updateMintPreview();
+
+  statusEl.className = 'tx-status success';
+  stTxt.textContent  = `✓ Minted ${(desired - fee).toFixed(4)} BASKET · View on Solscan ↗`;
+  btn.disabled = false;
+
+  document.getElementById('sn-2').style.background = 'var(--green)';
+  document.getElementById('sn-2').style.color      = 'var(--bg)';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Redeem flow
+// ─────────────────────────────────────────────────────────────────────────────
+
+function setMaxRedeem() {
+  document.getElementById('redeem-amount').value = state.basketBalance.toFixed(4);
+  updateRedeemPreview();
+}
+
+function updateRedeemPreview() {
+  const amt = parseFloat(document.getElementById('redeem-amount').value) || 0;
+  const fee = amt * 0.001;
+  document.getElementById('r-balance').textContent = state.basketBalance.toFixed(4) + ' BASKET';
+  document.getElementById('r-usd').textContent     = '$' + ((amt - fee)).toFixed(2);
+  document.getElementById('r-fee').textContent     = '$' + fee.toFixed(4);
+}
+
+async function doRedeem() {
+  const amt = parseFloat(document.getElementById('redeem-amount').value) || 0;
+  if (!amt || amt > state.basketBalance) return;
+
+  const statusEl = document.getElementById('redeem-status');
+  const stTxt    = document.getElementById('redeem-status-text');
+
+  statusEl.className = 'tx-status pending';
+  stTxt.textContent  = 'Burning BASKET tokens...';
+  await sleep(1400);
+
+  const fee = amt * 0.001;
+  state.basketBalance  -= amt;
+  state.basketMinted   -= amt;
+  state.insuranceFund  += fee;
+
+  // Return collateral proportionally
+  const usdReturned = amt - fee;
+  state.totalCollateralUSD -= usdReturned;
+  recalcCR();
+  updateStats();
+
+  statusEl.className = 'tx-status success';
+  stTxt.textContent  = `✓ Redeemed $${usdReturned.toFixed(2)} in collateral`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stats + helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function updateStats() {
+  document.getElementById('stat-tvl').textContent =
+    '$' + state.tvl.toLocaleString('en-US',{maximumFractionDigits:0});
+  document.getElementById('stat-supply').textContent =
+    state.basketMinted.toLocaleString('en-US',{maximumFractionDigits:2});
+  document.getElementById('stat-insurance').textContent =
+    '$' + state.insuranceFund.toFixed(2);
+}
+
+function updateAll() {
+  updateStats();
+  updateCRDisplay();
+  updateMintPreview();
+  updateRedeemPreview();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

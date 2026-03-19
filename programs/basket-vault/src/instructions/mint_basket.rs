@@ -11,12 +11,12 @@
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount, Mint};
-use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 use crate::state::*;
 use crate::oracle::*;
 use crate::sss_interface;
 use crate::svs_interface::read_total_assets;
 use crate::errors::VaultError;
+use std::cmp::min;
 
 pub const INSURANCE_FEE_BPS: u64 = 10; // 0.1%
 
@@ -38,12 +38,13 @@ pub struct MintBasket<'info> {
     #[account(mut, token::mint = basket_mint, token::authority = user)]
     pub user_basket_account: Account<'info, TokenAccount>,
 
+    /// User's CDP position tracking (debt + collateral ratio)
     #[account(
         init_if_needed,
         payer = user,
-        space = UserPosition::LEN,
-        seeds = [USER_POSITION_SEED, user.key().as_ref()],
-        bump,
+        space = 8 + 32 + 8 + 8 + 8 + 1,
+        seeds = [b"position", user.key().as_ref()],
+        bump
     )]
     pub user_position: Account<'info, UserPosition>,
 
@@ -51,14 +52,12 @@ pub struct MintBasket<'info> {
     #[account(address = global_config.sss_program)]
     pub sss_program: UncheckedAccount<'info>,
 
-    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
 
-    // remaining_accounts layout (in registry order, repeated 4 times):
-    //   [0..N]    Pyth PriceUpdateV2 accounts
-    //   [N..2N]   SVS-1 vault accounts
-    //   [2N..3N]  user SVS shares token accounts
-    //   [3N..4N]  SVS shares mint accounts
+    // remaining_accounts layout (in registry order, repeated twice):
+    //   [0..N]    Pyth PriceUpdateV2 accounts  (one per asset)
+    //   [N..2N]   SVS-1 vault accounts          (one per asset)
 }
 
 pub fn handler(
@@ -73,48 +72,21 @@ pub fn handler(
     let registry = &config.asset_registry;
     let n        = registry.len();
 
-    require!(ctx.remaining_accounts.len() >= n * 4, VaultError::MissingOracleAccounts);
+    require!(ctx.remaining_accounts.len() >= n * 2, VaultError::MissingOracleAccounts);
 
-    let user_position = &mut ctx.accounts.user_position;
-    if user_position.owner == Pubkey::default() {
-        user_position.owner = ctx.accounts.user.key();
-        user_position.bump = ctx.bumps.user_position;
-        user_position.debt = 0;
-        user_position.last_liquidation_ts = 0;
-    }
-    require_keys_eq!(user_position.owner, ctx.accounts.user.key(), VaultError::PositionOwnerMismatch);
-
-    // ── 1. Read user collateral from SVS-1 shares ─────────────────────────
+    // ── 1. Read SVS-1 vault balances (direct account read) ────────────────
     let mut collateral_amounts: Vec<u64> = Vec::with_capacity(n);
     for i in 0..n {
         let vault_info = &ctx.remaining_accounts[n + i];
-        let user_shares_info = &ctx.remaining_accounts[(2 * n) + i];
-        let shares_mint_info = &ctx.remaining_accounts[(3 * n) + i];
-
-        let total_assets = read_total_assets(vault_info)?;
-
-        let user_shares_acct = TokenAccount::try_from(user_shares_info)
-            .map_err(|_| error!(VaultError::InvalidOracleAccount))?;
-        require_keys_eq!(user_shares_acct.owner, ctx.accounts.user.key(), VaultError::InvalidUserSharesOwner);
-
-        let shares_mint = Mint::try_from(shares_mint_info)
-            .map_err(|_| error!(VaultError::InvalidOracleAccount))?;
-        let total_shares = shares_mint.supply.max(1);
-
-        let user_assets = (total_assets as u128)
-            .checked_mul(user_shares_acct.amount as u128).ok_or(error!(VaultError::MathOverflow))?
-            .checked_div(total_shares as u128).ok_or(error!(VaultError::MathOverflow))? as u64;
-
-        collateral_amounts.push(user_assets);
+        let total = read_total_assets(vault_info)?;
+        collateral_amounts.push(total);
     }
 
     // ── 2. Fetch Pyth prices ───────────────────────────────────────────────
     let mut prices: Vec<NormalizedPrice> = Vec::with_capacity(n);
     for (i, asset) in registry.iter().enumerate() {
         let pyth_info = &ctx.remaining_accounts[i];
-        let pyth_acct: Account<PriceUpdateV2> = Account::try_from(pyth_info)
-            .map_err(|_| error!(VaultError::InvalidOracleAccount))?;
-        let p = normalize_pyth_price(&pyth_acct, &asset.pyth_feed_id_hex, &clock)?;
+        let p = normalize_pyth_price(pyth_info, &asset.pyth_feed_id_hex, &clock)?;
         prices.push(p);
     }
 
@@ -126,18 +98,55 @@ pub fn handler(
 
     msg!("basket_value={} btc_conf_bps={} cr={}", basket_value, btc_conf_bps, cr);
 
-    // ── 4. Insurance fee (0.1%) + position CR gate ────────────────────────
-    let fee    = desired_amount.saturating_mul(INSURANCE_FEE_BPS) / 10_000;
-    let net    = desired_amount.checked_sub(fee).ok_or(error!(VaultError::MathOverflow))?;
-
-    check_position_mint_allowed(
+    // ── 4. CR gate ─────────────────────────────────────────────────────────
+    check_mint_allowed(
         basket_value,
-        user_position.debt,
-        net,
+        ctx.accounts.basket_mint.supply,
+        desired_amount,
         cr,
     )?;
 
-    // ── 5. CPI → SSS mint_tokens ───────────────────────────────────────────
+    // ── 5. Insurance fee (0.1%) ────────────────────────────────────────────
+    let fee    = desired_amount.saturating_mul(INSURANCE_FEE_BPS) / 10_000;
+    let net    = desired_amount.checked_sub(fee).ok_or(error!(VaultError::MathOverflow))?;
+
+    // ── 5.5 Update CDP position BEFORE minting ────────────────────────────
+    let position = &mut ctx.accounts.user_position;
+    
+    // Initialize position if first mint
+    if position.owner == Pubkey::default() {
+        position.owner = ctx.accounts.user.key();
+        position.bump = ctx.bumps.user_position;
+    }
+
+    // Update debt: add the net amount being minted
+    position.debt = position.debt
+        .checked_add(net)
+        .ok_or(error!(VaultError::MathOverflow))?;
+
+    // Store collateral value as u64 by normalizing from u128
+    // basket_value is in micro-USD (10^6 = 1 USD), safe to cast
+    position.collateral_value = min(basket_value as u64, u64::MAX);
+
+    // Calculate and store CR in basis points (e.g., 15000 = 150%)
+    let cr_bps = if position.debt == 0 {
+        u64::MAX
+    } else {
+        (position.collateral_value as u128)
+            .checked_mul(10_000).ok_or(error!(VaultError::MathOverflow))?
+            .checked_div(position.debt as u128).ok_or(error!(VaultError::MathOverflow))?
+            as u64
+    };
+    position.cr_bps = cr_bps;
+
+    emit!(MintPositionUpdated {
+        user: position.owner,
+        new_debt: position.debt,
+        new_collateral_value: position.collateral_value,
+        new_cr_bps: position.cr_bps,
+    });
+
+    // ── 6. CPI → SSS mint_tokens ───────────────────────────────────────────
     let bump   = config.vault_authority_bump;
     let seeds: &[&[&[u8]]] = &[&[VAULT_AUTH_SEED, &[bump]]];
 
@@ -151,15 +160,12 @@ pub fn handler(
         net,
     )?;
 
-    // ── 6. Update state ────────────────────────────────────────────────────
+    // ── 7. Update global state ────────────────────────────────────────────────────
     let config = &mut ctx.accounts.global_config;
     config.total_minted = config.total_minted
         .checked_add(net).ok_or(error!(VaultError::MathOverflow))?;
     config.insurance_fund_lamports = config.insurance_fund_lamports
         .saturating_add(fee);
-
-    user_position.debt = user_position.debt
-        .checked_add(net).ok_or(error!(VaultError::MathOverflow))?;
 
     emit!(MintEvent {
         user:          ctx.accounts.user.key(),
@@ -168,11 +174,11 @@ pub fn handler(
         basket_value,
         cr_applied:    cr,
         btc_conf_bps:  btc_conf_bps as u16,
-        user_debt_after: user_position.debt,
         timestamp:     clock.unix_timestamp,
     });
 
-    msg!("Minted {} BASKET | fee={} | CR={}% | basket_value={}", net, fee, cr, basket_value);
+    msg!("Minted {} BASKET | fee={} | CR={}% | basket_value={} | user_cr={}%", 
+        net, fee, cr, basket_value, position.cr_bps / 100);
     Ok(())
 }
 
@@ -184,6 +190,13 @@ pub struct MintEvent {
     pub basket_value:  u128,
     pub cr_applied:    u16,
     pub btc_conf_bps:  u16,
-    pub user_debt_after: u64,
     pub timestamp:     i64,
+}
+
+#[event]
+pub struct MintPositionUpdated {
+    pub user: Pubkey,
+    pub new_debt: u64,
+    pub new_collateral_value: u64,
+    pub new_cr_bps: u64,
 }

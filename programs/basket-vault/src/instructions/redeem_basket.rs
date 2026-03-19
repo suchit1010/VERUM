@@ -4,6 +4,7 @@
 // Withdrawals always open — even in emergency mode.
 
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program_pack::Pack;
 use anchor_spl::token::{Token, TokenAccount, Mint};
 use crate::state::*;
 use crate::sss_interface;
@@ -31,12 +32,11 @@ pub struct RedeemBasket<'info> {
     #[account(mut, token::mint = basket_mint, token::authority = user)]
     pub user_basket_account: Account<'info, TokenAccount>,
 
+    /// User's CDP position (updated when they redeem)
     #[account(
-        init_if_needed,
-        payer = user,
-        space = UserPosition::LEN,
-        seeds = [USER_POSITION_SEED, user.key().as_ref()],
-        bump,
+        mut,
+        seeds = [b"position", user.key().as_ref()],
+        bump = user_position.bump
     )]
     pub user_position: Account<'info, UserPosition>,
 
@@ -61,26 +61,15 @@ pub struct RedeemBasket<'info> {
     // = 6 accounts × N assets
 }
 
-pub fn handler(
-    ctx: Context<RedeemBasket>,
+pub fn handler<'info>(
+    ctx: Context<'_, '_, '_, 'info, RedeemBasket<'info>>,
     basket_amount: u64,
     min_assets_per_vault: Vec<u64>,  // slippage protection per asset
 ) -> Result<()> {
     require!(basket_amount > 0, VaultError::ZeroAmount);
     require!(ctx.accounts.user_basket_account.amount >= basket_amount, VaultError::InsufficientBalance);
 
-    let user_position = &mut ctx.accounts.user_position;
-    if user_position.owner == Pubkey::default() {
-        user_position.owner = ctx.accounts.user.key();
-        user_position.bump = ctx.bumps.user_position;
-        user_position.debt = 0;
-        user_position.last_liquidation_ts = 0;
-    }
-    require_keys_eq!(user_position.owner, ctx.accounts.user.key(), VaultError::PositionOwnerMismatch);
-
-    let config   = &ctx.accounts.global_config;
-    let registry = &config.asset_registry;
-    let n        = registry.len();
+    let n = ctx.accounts.global_config.asset_registry.len();
 
     require!(min_assets_per_vault.len() == n, VaultError::AssetCountMismatch);
     require!(ctx.remaining_accounts.len() >= n * 6, VaultError::MissingOracleAccounts);
@@ -105,7 +94,7 @@ pub fn handler(
     let total_supply  = ctx.accounts.basket_mint.supply.max(1);
 
     // ── 3. Redeem from each SVS-1 vault ───────────────────────────────────
-    for (i, _asset) in registry.iter().enumerate() {
+    for i in 0..n {
         let base = i * 6;
         let svs_vault    = ctx.remaining_accounts[base + 0].clone();
         let user_assets  = ctx.remaining_accounts[base + 1].clone();
@@ -116,8 +105,12 @@ pub fn handler(
 
         // Pro-rata shares: how many SVS share tokens to burn
         // (This is simplified — in production track per-user share balances)
-        let user_shares_acct = TokenAccount::try_from(&user_shares)?;
-        let user_share_bal   = user_shares_acct.amount;
+        let user_share_bal = {
+            let user_shares_data = user_shares.try_borrow_data()?;
+            let parsed = anchor_spl::token::spl_token::state::Account::unpack(&user_shares_data)
+                .map_err(|_| error!(VaultError::InvalidOracleAccount))?;
+            parsed.amount
+        };
 
         let shares_to_redeem = (user_share_bal as u128)
             .checked_mul(net_basket as u128).ok_or(error!(VaultError::MathOverflow))?
@@ -144,17 +137,45 @@ pub fn handler(
     let config = &mut ctx.accounts.global_config;
     config.total_minted = config.total_minted.saturating_sub(basket_amount);
     config.insurance_fund_lamports = config.insurance_fund_lamports.saturating_add(fee);
-    user_position.debt = user_position.debt.saturating_sub(basket_amount);
+
+    // ── 4.5 Update CDP position after redemption ───────────────────────────
+    let position = &mut ctx.accounts.user_position;
+
+    // Reduce debt by the basket amount redeemed
+    position.debt = position.debt
+        .checked_sub(basket_amount)
+        .ok_or(error!(VaultError::MathOverflow))?;
+
+    // If position is fully closed, can leave collateral_value as is (zeroed in next mint)
+    // Otherwise recalculate CR after debt reduction
+    if position.debt == 0 {
+        position.collateral_value = 0;
+        position.cr_bps = u64::MAX;
+    } else {
+        // Recalculate CR with reduced debt (will improve CR since debt decreased)
+        position.cr_bps = (position.collateral_value as u128)
+            .checked_mul(10_000)
+            .ok_or(error!(VaultError::MathOverflow))?
+            .checked_div(position.debt as u128)
+            .ok_or(error!(VaultError::MathOverflow))? as u64;
+    }
+
+    emit!(UpdatedPositionEvent {
+        user: position.owner,
+        remaining_debt: position.debt,
+        new_cr_bps: position.cr_bps,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
 
     emit!(RedeemEvent {
         user:            ctx.accounts.user.key(),
         basket_burned:   basket_amount,
         fee,
-        user_debt_after: user_position.debt,
         timestamp:       Clock::get()?.unix_timestamp,
     });
 
-    msg!("Redeemed {} BASKET | fee={}", basket_amount, fee);
+    msg!("Redeemed {} BASKET | fee={} | remaining_debt={} | new_cr={}%", 
+        basket_amount, fee, position.debt, position.cr_bps / 100);
     Ok(())
 }
 
@@ -163,6 +184,13 @@ pub struct RedeemEvent {
     pub user:          Pubkey,
     pub basket_burned: u64,
     pub fee:           u64,
-    pub user_debt_after: u64,
     pub timestamp:     i64,
+}
+
+#[event]
+pub struct UpdatedPositionEvent {
+    pub user: Pubkey,
+    pub remaining_debt: u64,
+    pub new_cr_bps: u64,
+    pub timestamp: i64,
 }
