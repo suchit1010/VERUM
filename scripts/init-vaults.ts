@@ -24,14 +24,14 @@ function publicKeyFromEnv(name: string, fallback: string): PublicKey {
 
 const SVS1_ID = publicKeyFromEnv("SVS1_PROGRAM_ID", "Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC");
 
-// Collateral mints (devnet test mints)
+// Collateral mints (devnet test mints - using SSS Token-2022 mints)
 const ASSETS = [
-  { key: "XAU", mint: publicKeyFromEnv("ASSET_MINT_XAU", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 8, vaultId: 0 },
-  { key: "WTI", mint: publicKeyFromEnv("ASSET_MINT_WTI", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6, vaultId: 1 },
-  { key: "BTC", mint: publicKeyFromEnv("ASSET_MINT_BTC", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 8, vaultId: 2 },
-  { key: "XAG", mint: publicKeyFromEnv("ASSET_MINT_XAG", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 8, vaultId: 3 },
-  { key: "DXY", mint: publicKeyFromEnv("ASSET_MINT_DXY", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6, vaultId: 4 },
-  { key: "RWA", mint: publicKeyFromEnv("ASSET_MINT_RWA", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6, vaultId: 5 },
+  { key: "XAU", mint: new PublicKey("F5r2ep6exHgcLX1cFmShzE5PjzZM4ZL51ZZMyShUzwBD"), decimals: 6, vaultId: 0 },
+  { key: "WTI", mint: new PublicKey("69cvuJ9477KfwzKFfmnRFMwd8rmaS4k6Zhz8jpbcbzVf"), decimals: 6, vaultId: 1 },
+  { key: "BTC", mint: new PublicKey("F5r2ep6exHgcLX1cFmShzE5PjzZM4ZL51ZZMyShUzwBD"), decimals: 6, vaultId: 2 },
+  { key: "XAG", mint: new PublicKey("F5r2ep6exHgcLX1cFmShzE5PjzZM4ZL51ZZMyShUzwBD"), decimals: 6, vaultId: 3 },
+  { key: "DXY", mint: new PublicKey("69cvuJ9477KfwzKFfmnRFMwd8rmaS4k6Zhz8jpbcbzVf"), decimals: 6, vaultId: 4 },
+  { key: "RWA", mint: new PublicKey("F5r2ep6exHgcLX1cFmShzE5PjzZM4ZL51ZZMyShUzwBD"), decimals: 6, vaultId: 5 },
 ];
 
 async function initVault(
@@ -55,7 +55,8 @@ async function initVault(
   const assetVault = await getAssociatedTokenAddress(
     asset.mint,
     vault,
-    true  // allowOwnerOffCurve
+    true,  // allowOwnerOffCurve
+    new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb")
   );
 
   console.log(`  Vault PDA: ${vault.toBase58()}`);

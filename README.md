@@ -162,6 +162,7 @@ As of March 20, 2026, BASKET is deployed and operational on Solana Devnet:
 - **VaultAuthority PDA**: `EmW8XrqKa8XHKiYR3b7m9ucShwmwKpDeahiApdhYJ8zF`
 - **Collateral Ratio**: 150% (Normal regime - BTC conf/price < 0.30%)
 - **Emergency Mode**: Disabled
+- **SVS-1 Vaults**: All 6 collateral vaults initialized (XAU, WTI, BTC, XAG, DXY, RWA)
 
 ### Frontend
 - **Dev Server**: Running on `http://localhost:5177`
