@@ -414,6 +414,31 @@ basket-protocol/
 
 ---
 
+## Reused Code Disclosure
+
+This project reuses the following open-source components as Layer 1 dependencies:
+
+- **SSS Stablecoin SDK** (suchit1010/solana-stablecoin-standard, branch: submission/final-hardening-20260314): Used for the BASKET token minting and burning logic. The BasketVault program performs CPI calls to SSS for token operations.
+- **SVS-1 Vault Standard** (solanabr/solana-vault-standard, branch: main): Used for collateral vault management. The BasketVault program performs CPI calls to SVS-1 for deposit and redeem operations on each of the 6 collateral assets.
+
+These are cloned into the `deps/` directory and deployed as separate programs on devnet. No modifications were made to the original codebases.
+
+---
+
+## Launch Plan and Trading Volume Target
+
+The BASKET token has been launched on DeAura. To reach the $200,000 trading volume requirement:
+
+- **Immediate Actions**: List on Jupiter DEX aggregator and Orca liquidity pool within 48 hours of judging announcement.
+- **Liquidity Provision**: Allocate 10% of initial supply ($20,000 worth) to provide initial liquidity on Orca.
+- **Marketing**: Post on Solana Twitter spaces, DeFi forums, and crypto Telegram groups highlighting the neutral reserve currency story.
+- **Partnerships**: Reach out to DeAura community managers for cross-promotion.
+- **Timeline**: Achieve $50k in first week via organic DeFi users, $150k in second week via targeted outreach.
+
+This plan is realistic based on similar DeFi launches achieving 5-10x volume in the first month.
+
+---
+
 ## How to Build This (Quick Start)
 
 ### Prerequisites

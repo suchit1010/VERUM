@@ -86,6 +86,6 @@ impl UserPosition {
         (self.collateral_value as u128)
             .checked_mul(10_000)
             .and_then(|v| v.checked_div(self.debt as u128))
-            .unwrap_or(u64::MAX) as u64
+            .unwrap_or(u128::MAX) as u64
     }
 }
