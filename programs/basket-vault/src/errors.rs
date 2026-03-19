@@ -1,79 +1,50 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum BasketVaultError {
-    #[msg("Unauthorized authority")]
-    Unauthorized,
+pub enum VaultError {
+    // Oracle
+    #[msg("Pyth price stale (>60s)")]             StaleOracle,
+    #[msg("Oracle confidence >2% of price")]      OracleUnreliable,
+    #[msg("Oracle returned negative price")]      NegativePrice,
+    #[msg("Oracle returned zero confidence")]     ZeroConfidence,
+    #[msg("Not enough valid oracle sources")]      InsufficientOracleSources,
+    #[msg("Oracle spread >1.5% — manipulation?")] PriceSpreadTooWide,
+    #[msg("Invalid Pyth feed ID")]                InvalidFeedId,
+    #[msg("Cannot deserialize oracle account")]   InvalidOracleAccount,
+    #[msg("Missing oracle remaining_accounts")]   MissingOracleAccounts,
 
-    #[msg("Too many assets in registry")]
-    TooManyAssets,
+    // Math
+    #[msg("Arithmetic overflow")]                 MathOverflow,
+    #[msg("Collateral below required CR")]        UnderCollateralized,
+    #[msg("Asset count mismatch")]                AssetCountMismatch,
 
-    #[msg("Asset already registered")]
-    DuplicateAsset,
+    // Deposit / withdraw
+    #[msg("Amount must be > 0")]                  ZeroAmount,
+    #[msg("Insufficient user balance")]           InsufficientBalance,
+    #[msg("Slippage exceeded")]                   SlippageExceeded,
 
-    #[msg("Asset weight must be greater than zero")]
-    InvalidAssetWeight,
+    // Protocol
+    #[msg("Emergency mode active")]               EmergencyModeActive,
+    #[msg("Unauthorized rebalance caller")]       UnauthorizedRebalance,
+    #[msg("Unauthorized emergency caller")]       UnauthorizedEmergency,
+    #[msg("Rebalance interval not elapsed (90d)")] RebalanceTooFrequent,
+    #[msg("Weight proposal >24h old")]            StaleWeightProposal,
+    #[msg("Weight count != registry length")]     WeightCountMismatch,
+    #[msg("Weights don't sum to 10_000 bps")]     WeightsDontSumToFull,
+    #[msg("Weight below 5% minimum")]             WeightBelowMinimum,
+    #[msg("Weight above 35% maximum")]            WeightAboveMaximum,
+    #[msg("Weight shift >5% per quarter")]        WeightShiftTooLarge,
+    // Liquidation
+    #[msg("Position not liquidatable (healthy CR)")]    PositionNotLiquidatable,
+    #[msg("Insufficient collateral for liquidation")]   InsufficientCollateralForLiquidation,
+    #[msg("No valid oracles found or all stale")]       NoValidOracles,
+    #[msg("Liquidator is position owner")]              LiquidatorIsOwner,
+    #[msg("Liquidation would exceed max per zone")]     LiquidationExceedsMaxPerZone,
+    #[msg("Liquidation circuit breaker triggered")]     LiquidationCircuitBreakerTriggered,
 
-    #[msg("Asset minimum collateral ratio is invalid")]
-    InvalidAssetMinCr,
-
-    #[msg("Weight vector length does not match registered assets")]
-    InvalidWeightsLen,
-
-    #[msg("Total weight must equal 10_000 basis points")]
-    InvalidWeightTotal,
-
-    #[msg("Rebalance cooldown still active")]
-    RebalanceCooldownActive,
-
-    #[msg("Math overflow")]
-    MathOverflow,
-
-    #[msg("Collateral amount vector length does not match asset registry")]
-    InvalidCollateralVector,
-
-    #[msg("Asset not found in registry")]
-    AssetNotFound,
-
-    #[msg("Invalid oracle price")]
-    InvalidOraclePrice,
-
-    #[msg("Oracle price is stale")]
-    StaleOraclePrice,
-
-    #[msg("Collateral is below required ratio")]
-    UnderCollateralized,
-
-    #[msg("Invalid basket mint decimals")]
-    InvalidBasketDecimals,
-
-    #[msg("Basket mint does not match global config")]
-    InvalidBasketMint,
-
-    #[msg("SSS program mismatch")]
-    InvalidSssProgram,
-
-    #[msg("Minting is currently paused")]
-    MintingPaused,
-
-    #[msg("Requested mint amount exceeds max per transaction")]
-    MintAmountTooLarge,
-
-    #[msg("Invalid asset decimals")]
-    InvalidAssetDecimals,
-
-    #[msg("Manual price updates are disabled unless emergency mode is enabled")]
-    ManualPriceUpdateDisabled,
-
-    #[msg("Oracle mint does not match registered asset mint")]
-    OracleMintMismatch,
-
-    #[msg("Oracle feed does not match registered feed")]
-    OracleFeedMismatch,
-
-    #[msg("Oracle token decimals mismatch")]
-    OracleDecimalsMismatch,
-
-    #[msg("Oracle confidence exceeds configured threshold")]
-    OracleConfidenceTooWide,
+    // CPI & account validation
+    #[msg("CPI call failed")]                           CPIFailed,
+    #[msg("Invalid account discriminator")]             InvalidDiscriminator,
+    #[msg("SVS-1 vault account mismatch")]              SVSVaultMismatch,
+    #[msg("SSS program account mismatch")]              SSSProgramMismatch,
 }

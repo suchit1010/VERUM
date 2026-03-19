@@ -18,14 +18,14 @@
     "@solana/spl-token": "^0.4.12",
     "@solana/web3.js": "^1.98.0",
     "@stbr/sss-token": "file:../sdk/core",
-    "@types/react": "^18.3.28",
+    "@types/react": "^17.0.83",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
     "ink": "^3.2.0",
     "ink-select-input": "^4.2.1",
     "ink-text-input": "^4.0.3",
     "ora": "^5.4.1",
-    "react": "^18.3.1",
+    "react": "^17.0.2",
     "toml": "^3.0.0"
   },
   "devDependencies": {

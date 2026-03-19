@@ -1,13 +1,25 @@
-#![allow(unexpected_cfgs)]
+// programs/basket-vault/src/lib.rs
+//
+// BasketVault — Layer 2 on top of:
+//   SSS (suchit1010) → BASKET mint/burn
+//   SVS-1 (solanabr) → ERC-4626 collateral vaults
 
 use anchor_lang::prelude::*;
 
 pub mod errors;
-pub mod events;
-pub mod instructions;
 pub mod state;
+pub mod math;
+pub mod oracle;
+pub mod svs_interface;
+pub mod sss_interface;
+pub mod instructions;
 
-pub use crate::instructions::*;
+use instructions::initialize::*;
+use instructions::mint_basket::*;
+use instructions::redeem_basket::*;
+use instructions::rebalance_weights::*;
+use instructions::emergency::*;
+use instructions::liquidate::*;
 
 declare_id!("HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB");
 
@@ -15,59 +27,50 @@ declare_id!("HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB");
 pub mod basket_vault {
     use super::*;
 
-    pub fn initialize(
-        ctx: Context<Initialize>,
-        params: InitializeParams,
-    ) -> Result<()> {
-        instructions::initialize::initialize_handler(ctx, params)
+    /// One-time setup. Transfers BASKET mint authority to vault PDA.
+    pub fn initialize(ctx: Context<Initialize>, cfg: InitConfig) -> Result<()> {
+        instructions::initialize::handler(ctx, cfg)
     }
 
-    pub fn register_asset(
-        ctx: Context<RegisterAsset>,
-        params: RegisterAssetParams,
-    ) -> Result<()> {
-        instructions::register_asset::register_asset_handler(ctx, params)
+    /// Mint BASKET against deposited SVS-1 collateral.
+    ///
+    /// remaining_accounts (in registry order, repeated twice):
+    ///   [0..N]  Pyth PriceUpdateV2 accounts
+    ///   [N..2N] SVS-1 vault accounts
+    pub fn mint_basket(ctx: Context<MintBasket>, desired_amount: u64) -> Result<()> {
+        instructions::mint_basket::handler(ctx, desired_amount)
     }
 
-    pub fn update_weights(
-        ctx: Context<UpdateWeights>,
-        params: UpdateWeightsParams,
+    /// Burn BASKET → redeem pro-rata collateral from SVS-1 vaults.
+    /// Always available — even in emergency mode.
+    ///
+    /// remaining_accounts per asset (6 × N assets):
+    ///   svs_vault, user_asset_account, vault_asset_account,
+    ///   user_shares_account, shares_mint, token_owner_pda
+    pub fn redeem_basket<'info>(
+        ctx: Context<'_, '_, '_, 'info, RedeemBasket<'info>>,
+        basket_amount: u64,
+        min_assets_per_vault: Vec<u64>,
     ) -> Result<()> {
-        instructions::update_weights::update_weights_handler(ctx, params)
+        instructions::redeem_basket::handler(ctx, basket_amount, min_assets_per_vault)
     }
 
-    pub fn update_asset_price(
-        ctx: Context<UpdateAssetPrice>,
-        params: UpdateAssetPriceParams,
+    /// Submit quarterly Chainlink Functions weight proposal.
+    /// Caller must be rebalance_authority.
+    pub fn rebalance_weights(
+        ctx: Context<RebalanceWeights>,
+        proposal: WeightProposal,
     ) -> Result<()> {
-        instructions::update_asset_price::update_asset_price_handler(ctx, params)
+        instructions::rebalance_weights::handler(ctx, proposal)
     }
 
-    pub fn update_asset_price_from_oracle(
-        ctx: Context<UpdateAssetPriceFromOracle>,
-        params: UpdateAssetPriceFromOracleParams,
-    ) -> Result<()> {
-        instructions::update_asset_price_from_oracle::update_asset_price_from_oracle_handler(ctx, params)
+    /// Toggle emergency mode. Pauses mints; withdrawals stay open.
+    pub fn set_emergency_mode(ctx: Context<SetEmergencyMode>, active: bool) -> Result<()> {
+        instructions::emergency::handler(ctx, active)
     }
 
-    pub fn mint_against_collateral(
-        ctx: Context<MintAgainstCollateral>,
-        params: MintAgainstCollateralParams,
-    ) -> Result<()> {
-        instructions::mint_against_collateral::mint_against_collateral_handler(ctx, params)
-    }
-
-    pub fn set_crisis_mode(
-        ctx: Context<SetCrisisMode>,
-        enabled: bool,
-    ) -> Result<()> {
-        instructions::set_crisis_mode::set_crisis_mode_handler(ctx, enabled)
-    }
-
-    pub fn set_minting_paused(
-        ctx: Context<SetMintingPaused>,
-        paused: bool,
-    ) -> Result<()> {
-        instructions::set_minting_paused::set_minting_paused_handler(ctx, paused)
+    /// Execute a graduated liquidation against an undercollateralized position.
+    pub fn liquidate(ctx: Context<Liquidate>, repay_amount: u64) -> Result<()> {
+        instructions::liquidate::handler(ctx, repay_amount)
     }
 }

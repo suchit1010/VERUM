@@ -2,19 +2,36 @@
 name = "basket-vault"
 version = "0.1.0"
 edition = "2021"
+description = "VERUM: Resilient Multi-Asset Stablecoin Protocol on Solana"
+authors = ["VERUM Team"]
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "basket_vault"
 
 [dependencies]
-anchor-lang = { workspace = true }
-anchor-spl = { workspace = true, features = ["token_2022"] }
-sss-stablecoin = { path = "../sss-stablecoin", features = ["cpi"] }
-sss-oracle = { path = "../sss-oracle", features = ["cpi"] }
+anchor-lang = { workspace = true, features = ["init-if-needed"] }
+anchor-spl = { workspace = true, features = ["token"] }
+spl-token = "=4.0.0"
+spl-memo = "=4.0.0"
+
+# Oracle integrations
+borsh = "1.6"
+
+# Math & utilities
+num-traits = "0.2"
+bytemuck = { version = "1.14", features = ["derive"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
 
 [features]
-default = []
+default = ["idl-build", "custom-heap"]
 no-entrypoint = []
 cpi = ["no-entrypoint"]
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]

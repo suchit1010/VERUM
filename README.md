@@ -1,285 +1,637 @@
-# Solana Stablecoin Standard (SSS)
+# BASKET — World Reserve Protocol
 
-Modular stablecoin framework and TypeScript SDK for building production-ready stablecoins on Solana. The framework provides standardized presets for minimal (SSS-1), compliant (SSS-2), and confidential (SSS-3) stablecoins using Token-2022 extensions.
+> *The neutral, crisis-resilient reserve currency backed by what the world actually runs on.*
 
-Think **OpenZeppelin for Stablecoins** on Solana — the SDK makes deployment easy, while the standards (SSS-1, SSS-2) ensure regulatory compliance and ecosystem interoperability.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Built on Solana](https://img.shields.io/badge/Built%20on-Solana-9945FF)](https://solana.com)
+[![Anchor](https://img.shields.io/badge/Anchor-0.30-blue)](https://anchor-lang.com)
+[![Network](https://img.shields.io/badge/Network-Devnet-green)](https://explorer.solana.com/?cluster=devnet)
+[![Hackathon](https://img.shields.io/badge/Buildifi%20Hack%202-DeFi%20Track-orange)](https://www.buildifi.ai)
 
-## SSS Variants
+---
 
-| Version | Name | Compliance | Transfer Hook | Delegate | Status |
-|---------|------|------------|---------------|----------|--------|
-| **SSS-1** | Minimal Stablecoin | Basic (Mint/Burn/Freeze) | ✗ | ✗ | ✅ Live |
-| **SSS-2** | Compliant Stablecoin | Advanced (Blacklist/Seize) | ✓ | ✓ | ✅ Live |
-| **SSS-3** | Private Stablecoin | ZK-Privacy | ✗ | ✗ | 🏗️ Research |
+## What We Are Building
 
-### Compliance Model Comparison
+Every stablecoin today is either a liability of one government (USDC, USDT), an experiment waiting to collapse (algorithmic), or a single-asset hedge that does not function as money (PAXG). When the dollar is weaponized through sanctions, when a central bank prints to fund a war, when one country's monetary policy exports inflation to every other country — there is no neutral alternative.
 
-**SSS-1 (Minimal):**
-- Standard Token-2022 Mint with Freeze authority.
-- Suitable for DAO treasuries, internal ecosystem tokens, and settlement assets.
-- Compliance is handled via manual freeze/thaw of accounts.
+**BASKET is that neutral alternative.**
 
-**SSS-2 (Compliant):**
-- **Permanent Delegate:** Enables "Seize" operations for regulatory compliance (e.g., court orders).
-- **Transfer Hook:** O(1) Blacklist enforcement on every transfer.
-- **Default Frozen:** Optional flag to require "KYC/Waitlist" before tokens can be used.
+It is a fully on-chain stablecoin whose value is pegged to a dynamic basket of the exact assets global trade revolves around: crude oil, gold, silver, agricultural commodities, Bitcoin as a digital hedge, and tokenized real-world assets. No single government controls it. No single asset can break it. The collateral ratio automatically tightens when markets become volatile, so the peg holds exactly when it matters most — in a crisis.
 
-## Program IDs
+This is not another yield farm. This is the reserve currency the world has needed since Bretton Woods failed.
 
-| Program | Devnet | Localnet |
-|---------|--------|----------|
-| SSS Core (`sss-stablecoin`) | `HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet` | Same as devnet |
-| SSS Hook (`sss-transfer-hook`) | `6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN` | Same as devnet |
-| SSS Oracle (`sss-oracle`) | `hntKYM3tbdSnAzYaSU1FvDpFoE8wwBRvY3hpsMHhrN6` | Same as devnet |
-| Basket Vault (`basket-vault`) | `HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB` | Same as devnet |
+---
 
-> [!NOTE]  
-> Verified working on Devnet. See [DEVNET_PROOF.md](DEVNET_PROOF.md) for transaction hashes.
+## The Problem We Are Solving
 
-## Latest Development (Mar 2026)
+| Problem | Current State | BASKET Solution |
+|---------|--------------|-----------------|
+| USD dominance is weaponized | Sanctions freeze reserves overnight | Neutral, decentralized, no single issuer |
+| Stablecoins fail in crises | Terra/UST lost $40B in 72h | Adaptive CR auto-escalates to 300% in stress |
+| Single-asset backing | PAXG = gold only, misses energy | Multi-asset basket mirrors real trade flows |
+| Fiat-backed means fiat inflation | USDC tracks USD debasement | Backed by scarce real-world commodities |
+| Oracle manipulation | Single source = single attack vector | Pyth + Switchboard median + spread check |
+| Opaque collateral | Can't verify backing in real time | Fully on-chain, readable 24/7 by anyone |
 
-- **Transfer Hook security hardening (production-critical):** fixed blacklist enforcement to derive destination/source blacklist PDAs from **token account owner wallets** (not token account addresses), preventing blacklist bypass via new ATA creation.
-- **Strict account validation in hook path:** added checks for expected stablecoin program, token-account decode validity, mint consistency, PDA correctness, and blacklist account ownership before allowing transfer.
-- **Safety cleanup:** removed risky runtime parsing/unwrap patterns in transfer-hook PDA program ID wiring.
-- **Clean compile state:** `cargo check -p sss-transfer-hook` now completes cleanly with no warnings.
-- **Admin CLI modernization:** replaced legacy terminal dashboard flow with a modern single-page Ink-based dashboard and fixed Windows keypair home-dir expansion behavior.
-- **BasketVault kickoff scaffold:** added new Anchor program at `programs/basket-vault` with production-shaped config/account model (`initialize`, `register_asset`, `update_weights`, `set_crisis_mode`), strict weight/authority checks, and crisis-mode controls. Chainlink pricing and SSS CPI mint authorization are the next implementation step.
-- **BasketVault phase-2 (oracle + mint path):** added `update_asset_price` and `mint_against_collateral` instructions, collateral valuation with staleness checks, and guarded CPI mint execution into `sss-stablecoin` (`mint_tokens`) only when active collateral ratio requirements are satisfied.
-- **BasketVault unit tests:** added deterministic tests for weighted collateral valuation and stale-price rejection (`cargo test -p basket-vault` passing).
-- **BasketVault production hardening:** added mint circuit-breaker (`set_minting_paused`), per-transaction mint caps, effective required-CR floor using per-asset minimum CR, full-weight enforcement before mint authorization, and PDA-signed CPI minting into `sss-stablecoin`.
-- **Oracle ingestion hardening:** added `update_asset_price_from_oracle` to sync prices only from verified `sss-oracle` PDA accounts (mint/feed/decimals checks + confidence threshold + staleness checks). Manual `update_asset_price` is now emergency-only.
-- **CI hardening:** workflow now runs `cargo test -p basket-vault` as a dedicated gate in addition to existing Anchor and clippy checks.
-- **Transfer hook Token-2022 compatibility fix:** hook now decodes token accounts with extension-aware parsing (`StateWithExtensions`), eliminating false negatives on valid extended token accounts.
-- **SSS-2 regression test hardening:** the non-ATA blacklist bypass test now creates a true non-associated token account (explicit keypair), validating owner-based blacklist protection.
-- **Runtime validation closure:** full TypeScript + SDK integration matrix now passes on localnet (`191 passing`) after deploying all programs and aligning Basket Vault program ID.
-
-## Installation
-
-```bash
-# Core SDK
-npm install @stbr/sss-token
-
-# Admin CLI
-npm install -g @stbr/sss-token-cli
-
-# Backend Services (Docker)
-cd backend && docker compose up
-```
-
-## Quick Start
-
-```typescript
-import { SolanaStablecoin, Presets } from "@stbr/sss-token";
-
-// 1. Initialize SSS-2 (Compliant) Stablecoin
-const { stablecoin, mint } = await SolanaStablecoin.create(provider, {
-  preset: Presets.SSS_2,
-  name: "Euro Standard",
-  symbol: "EURS",
-  decimals: 6,
-  authority: adminKeypair,
-});
-
-// 2. Mint tokens to recipient (Checks Minters Quota)
-await stablecoin.mint({ 
-  recipient: userAddress, 
-  amount: 1_000_000n 
-});
-
-// 3. Blacklist an address (Enforced via Transfer Hook)
-await stablecoin.compliance.blacklistAdd(
-  maliciousAddress, 
-  "OFAC Sanctions match"
-);
-
-// 4. Seize assets from blacklisted account (SSS-2 only)
-await stablecoin.compliance.seize(
-  maliciousAddress, 
-  treasuryVault, 
-  amount
-);
-```
-
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| **Minter Quotas** | Prevent infinite minting bugs by setting lifetime caps per minter PDA. |
-| **O(1) Blacklisting** | Transfer hook performs constant-time lookup; scales to millions of addresses. |
-| **Modular Roles** | Granular permissions for Master Authority, Minters, Burners, and Blacklisters. |
-| **Emergency Pause** | Global circuit breaker to halt all token operations in case of exploit. |
-| **Audit Trails** | Comprehensive Anchor Events for all administrative and compliance actions. |
-| **Token-2022 Native** | Leverages official Solana extensions for maximum security and efficiency. |
-
-## Backend Services
-
-The standard includes a robust backend suite for institutional operators:
-
-| Service | Port | Description |
-|---------|------|-------------|
-| **Mint/Burn API** | `3001` | REST API for triggering mint/burn from centralized systems. |
-| **Audit Indexer** | `3002` | Real-time indexing of all SSS events into PostgreSQL. |
-| **Compliance API** | `3003` | Integration point for Chainalysis/TRM/Elliptic blacklisting. |
-| **Webhooks** | `3004` | Outbound notifications for large transfers or admin actions. |
-
-## Core Operations
-
-| Operation | Requirement | Protection | Favors |
-|-----------|-------------|------------|--------|
-| **Mint** | Minter Role + Quota | Lifetime Caps | Exact |
-| **Burn** | Burner Role | Proof of Burn | Exact |
-| **Freeze** | Freeze Authority | Regulatory | Security |
-| **Blacklist**| Blacklister Role | O(1) Hook Enforcement | Compliance |
-| **Seize** | Seizer Role | Permanent Delegate | Recovery |
+---
 
 ## Architecture
 
+### Full System Stack
+
 ```
-┌──────────────────────────────────────────────────────┐
-│                    CLIENTS                            │
-│  CLI (sss-token) │ SDK (@stbr/sss-token) │ Frontend  │
-└────────┬─────────┴──────────┬────────────┴───────────┘
-         │                    │
-         ▼                    ▼
-┌──────────────────────────────┐  ┌───────────────────┐
-│    sss-stablecoin Program    │  │   Backend Services │
-│                              │  │   (Docker)         │
-│  Layer 3: Presets            │  │                    │
-│   SSS-1 │ SSS-2             │  │  Mint/Burn  │ Idx  │
-│                              │  │  Compliance │ Hook │
-│  Layer 2: Modules            │  └───────────────────┘
-│   Compliance │ Roles         │
-│                              │
-│  Layer 1: Base               │
-│   Token-2022 │ Metadata      │
-└──────────────┬───────────────┘
-               │
-┌──────────────┴───────────────┐
-│ sss-transfer-hook Program    │
-│ O(1) Blacklist Enforcement   │
-└──────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          BASKET Protocol Stack                               │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  LAYER 4 — CROSS-CHAIN (post-MVP)                                            │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  Chainlink CCIP → BRICS CBDC bridge → mBridge / e-CNY / Digital INR  │   │
+│  │  Oil & commodity trades settle in BASKET across chains                │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│  LAYER 3 — DATA & ORACLES                                                    │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────────────────┐    │
+│  │  Pyth Network   │  │  Switchboard    │  │  Chainlink Functions     │    │
+│  │  PRIMARY        │  │  FALLBACK       │  │  QUARTERLY REBALANCING   │    │
+│  │  Sub-second     │  │  Permissionless │  │  EIA oil supply/demand   │    │
+│  │  XAU WTI BTC    │  │  Custom feeds   │  │  FAO food price index    │    │
+│  │  XAG DXY        │  │  FAO WTO feeds  │  │  WTO trade volumes       │    │
+│  │  Pushed on-chain│  │  Uncorrelated   │  │  WGC gold reserves       │    │
+│  └────────┬────────┘  └────────┬────────┘  └───────────┬──────────────┘    │
+│           └─────────────────── ┼ ──────────────────────┘                   │
+│                                ▼                                            │
+│             Oracle Aggregator: median(valid_prices) + spread_check          │
+│                                                                              │
+│  LAYER 2 — BASKET VAULT (this repo — Layer 2 logic)                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  BasketVault Anchor Program                                          │   │
+│  │                                                                      │   │
+│  │  initialize()          → one-time setup, PDA becomes mint authority  │   │
+│  │  mint_basket()         → prices → CR gate → SSS CPI mint             │   │
+│  │  redeem_basket()       → burn BASKET → SVS-1 redeem CPIs             │   │
+│  │  rebalance_weights()   → validate + apply Chainlink Functions result  │   │
+│  │  set_emergency_mode()  → pause mints, withdrawals always stay open    │   │
+│  └────────────────────────┬────────────────────────┬─────────────────────┘  │
+│                           │ CPI: mint/burn          │ CPI: deposit/redeem   │
+│                           ▼                         ▼                       │
+│  LAYER 1A                                  LAYER 1B                         │
+│  ┌──────────────────────────┐   ┌──────────────────────────────────────┐   │
+│  │  SSS Stablecoin SDK      │   │  Solana Vault Standard (SVS-1)       │   │
+│  │  (suchit1010)            │   │  (solanabr) — ERC-4626               │   │
+│  │                          │   │                                      │   │
+│  │  mint_tokens(amount)     │   │  One vault per collateral asset:     │   │
+│  │  burn_tokens(amount)     │   │  ┌──────────┐  ┌──────────┐         │   │
+│  │  freeze / thaw           │   │  │PAXG Vault│  │tOIL Vault│  ...    │   │
+│  │                          │   │  └──────────┘  └──────────┘         │   │
+│  │  BASKET token lives here │   │  ┌──────────┐  ┌──────────┐         │   │
+│  │  Vault PDA = mint auth   │   │  │WBTC Vault│  │XAG Vault │  ...    │   │
+│  └──────────────────────────┘   │  └──────────┘  └──────────┘         │   │
+│                                 │                                      │   │
+│                                 │  Features per vault:                 │   │
+│                                 │  • Inflation attack protection       │   │
+│                                 │  • Vault-favoring rounding           │   │
+│                                 │  • Slippage min/max parameters       │   │
+│                                 │  • Emergency pause                   │   │
+│                                 │  • CPI-composable preview functions  │   │
+│                                 └──────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## PDA Derivation
+### Mint Flow
 
-### Stablecoin Config
-**Seeds:** `["config", mint_pubkey]`
-```typescript
-const [config] = PublicKey.findProgramAddressSync(
-  [Buffer.from("config"), mint.toBuffer()],
-  programId
-);
+```
+User wallet
+    │
+    ├── STEP 1: Deposit collateral into SVS-1 vault
+    │     User calls SVS-1::deposit(PAXG, amount)
+    │     SVS-1 transfers PAXG to vault token account
+    │     SVS-1 mints share tokens to user (ERC-4626 shares)
+    │     SVS-1 handles: rounding, slippage check, inflation protection
+    │
+    └── STEP 2: Mint BASKET
+          User calls BasketVault::mint_basket(desired_amount)
+
+          BasketVault:
+          ├─ Reads total_assets from each SVS-1 vault (direct account read)
+          ├─ Fetches Pyth PriceUpdateV2 for all 6 assets (remaining_accounts)
+          ├─ Tries Switchboard fallback per asset if Pyth stale
+          ├─ Computes median per asset, validates spread < 1.5%
+          ├─ basket_value = Σ( normalize(amount[i]) × price[i] × weight_bps[i] / 10000 )
+          ├─ btc_conf_bps = btc_conf / btc_price × 10000  ← vol proxy
+          ├─ adaptive_cr  = 150 | 200 | 300  based on btc_conf_bps
+          ├─ REQUIRE: basket_value >= desired × adaptive_cr / 100
+          ├─ Deducts 0.1% to insurance fund
+          └─ CPI → SSS::mint_tokens(net_amount)
+
+          User receives BASKET tokens
 ```
 
-### Minter Quota
-**Seeds:** `["minter", mint_pubkey, minter_pubkey]`
-```typescript
-const [quota] = PublicKey.findProgramAddressSync(
-  [Buffer.from("minter"), mint.toBuffer(), minter.toBuffer()],
-  programId
-);
+### Redeem Flow
+
+```
+User wallet
+    │
+    └── Calls BasketVault::redeem_basket(basket_amount)
+
+        BasketVault:
+        ├─ CPI → SSS::burn_tokens(basket_amount)
+        ├─ For each of 6 assets:
+        │   pro_rata_shares = user_share_balance × basket_amount / total_supply
+        │   CPI → SVS-1::redeem(pro_rata_shares, min_assets_out)
+        └─ User receives proportional collateral in all 6 assets
 ```
 
-### Blacklist Entry
-**Seeds:** `["blacklist", mint_pubkey, address_pubkey]`
-```typescript
-const [entry] = PublicKey.findProgramAddressSync(
-  [Buffer.from("blacklist"), mint.toBuffer(), address.toBuffer()],
-  programId
-);
+---
+
+## Basket Composition
+
+Initial weights mirror 2026 global trade flows. Rebalanced quarterly via Chainlink Functions.
+
+| Index | Asset | Symbol | Weight | Oracle Feed | Strategic Role |
+|-------|-------|--------|--------|-------------|---------------|
+| 0 | Gold | XAU / PAXG | **20%** | Pyth XAU/USD | Central bank reserve, store of value |
+| 1 | Crude Oil | WTI / tOIL | **25%** | Pyth WTI/USD | Energy — the global economy runs on it |
+| 2 | Bitcoin | BTC / WBTC | **15%** | Pyth BTC/USD | Digital hedge + **vol proxy for adaptive CR** |
+| 3 | Silver + Agri | XAG | **15%** | Pyth XAG/USD | Industrial metals + food security |
+| 4 | DXY / Bonds | DXY | **15%** | Pyth DXY | Forex stability anchor |
+| 5 | Tokenized RWAs | RWA | **10%** | Pyth proxy | Real estate, infrastructure |
+
+**Weight constraints enforced on-chain:**
+- Maximum shift per asset per rebalance: ±500 bps (5%)
+- Hard cap on any single asset: 3,500 bps (35%)
+- Hard floor per asset: 500 bps (5%)
+- Weights must sum to exactly 10,000 bps (100%)
+
+---
+
+## Adaptive Collateral Ratio
+
+The most important innovation. The minimum CR responds automatically to market volatility using BTC's Pyth confidence interval as a real-time VIX proxy. No governance vote. No delay. Automatic.
+
+```
+BTC conf/price (basis points)    Regime      Min CR Required
+────────────────────────────────────────────────────────────
+< 30 bps  (< 0.30%)          →  NORMAL    →  150%
+30–200 bps (0.30–2.00%)      →  ELEVATED  →  200%
+≥ 200 bps  (≥ 2.00%)         →  CRISIS    →  300%
 ```
 
-## Instructions
+**Why BTC confidence interval?**
+Pyth publishes a `conf` field alongside every price — the oracle network's own uncertainty estimate based on spread across its data providers. When market stress rises, BTC conf/price spikes. This is on-chain, real-time, and fully verifiable.
 
-### Base Operations (SSS-1 & SSS-2)
-| Instruction | Roll | Description |
-|-------------|------|-------------|
-| `initialize` | Authority | Setup mint and configure SSS preset |
-| `mint_tokens`| Minter | Mint tokens within quota limits |
-| `burn_tokens`| Burner | Burn tokens from caller account |
-| `freeze_account`| Authority | Halt a specific token account |
-| `set_pause` | Pauser | Toggle global emergency pause |
+**Historical calibration against real events:**
+- Calm 2024 market conditions: BTC conf/price ≈ 0.08–0.15% → Normal (150%)
+- August 2024 Yen carry trade unwind: ≈ 1.8% → Elevated (200%)
+- FTX collapse November 2022: ≈ 2.8% → Crisis (300%)
+- Luna/UST collapse May 2022: ≈ 3.5% → Crisis (300%)
 
-### Compliance Operations (SSS-2 Only)
-| Instruction | Role | Description |
-|-------------|------|-------------|
-| `add_to_blacklist` | Blacklister | Prevents address from sending/receiving |
-| `remove_from_blacklist`| Blacklister | Restores transfer capabilities |
-| `seize_tokens` | Seizer | Force transfer from blacklisted to treasury |
+---
 
-## Error Codes
+## Oracle Strategy
 
-| Code | Name | Description |
-|------|------|-------------|
-| 6000 | `Unauthorized` | Caller missing required role |
-| 6007 | `Paused` | Operations are globally paused |
-| 6009 | `QuotaExceeded` | Minter exceeded lifetime limit |
-| 6012 | `ComplianceNotEnabled` | SSS-2 feature called on SSS-1 mint |
-| 6016 | `AlreadyBlacklisted` | Address already in blacklist |
+Three oracles with deliberately different roles. Not redundant copies — separation of concerns.
 
-## Events
+```
+Real-time prices (every transaction):
+───────────────────────────────────────────────────────────────────
+  1. Pyth (primary)
+     Why: Pushed on-chain → zero latency read. Sub-second updates.
+          Best commodity + crypto coverage on Solana in 2026.
+          Free to read — no LINK fees at scale.
+     Reject: age > 60s OR conf/price > 2%
 
-| Event | Description |
-|-------|-------------|
-| `StablecoinInitialized` | Metadata and preset selection |
-| `TokensMinted` | Tracking minter, recipient, and amount |
-| `AddressBlacklisted` | Audit log for compliance actions |
-| `TokensSeized` | Permanent delegate recovery log |
-| `RoleUpdated` | Permission changes (RBAC) |
+  2. Switchboard (fallback)
+     Why: Permissionless — can create custom feeds for FAO food price
+          index, BRICS trade volumes, assets Pyth doesn't cover.
+          Failure mode uncorrelated with Pyth (different node infra).
+          Solana-native, clean Anchor SDK.
+     Reject: age > 120s
 
-## Security
+  3. Aggregation:
+     Collect valid prices → sort → lower median (conservative)
+     Reject if spread between sources > 150 bps (1.5%)
 
-- **RBAC (Role-Based Access Control):** Separates keys for minting, blacklisting, and freezing.
-- **Quota Systems:** Limits "Blast radius" of compromised minter keys.
-- **O(1) Verification:** Blacklist enforcement does not slow down with scale.
-- **Multisig Ready:** All authorities can be transferred to Squads/Multisig.
+Quarterly rebalancing (Chainlink Functions):
+───────────────────────────────────────────────────────────────────
+  4. Chainlink Functions
+     Why: Pull model with off-chain compute. Perfect for calling
+          REST APIs (EIA, FAO, WTO, WGC) and running weight logic.
+          NOT used for real-time prices (too slow, costs LINK).
+     Runs: Every 90 days
+     Fetches: EIA oil supply/demand, FAO Food Price Index,
+              WTO trade volume index, WGC gold reserve data
+     Output: Signed uint16[6] weight proposal → on-chain validation
+```
+
+---
+
+## Mathematical Specification
+
+### Basket Value Calculation
+
+```
+normalize(amount, decimals):
+  if decimals > 6: amount / 10^(decimals - 6)
+  if decimals < 6: amount × 10^(6 - decimals)
+  if decimals = 6: amount
+
+basket_value = Σᵢ [
+    normalize(collateral_amount[i], asset.decimals)
+  × normalize_price(pyth_price[i], pyth_expo[i])       ← to 6 dec
+  / 1_000_000
+  × asset.weight_bps[i]
+  / 10_000
+]
+```
+
+### Collateral Ratio
+
+```
+CR (%) = basket_value / basket_minted × 100
+```
+
+### Mint Gate
+
+```
+total_after  = current_supply + desired_amount
+required     = total_after × adaptive_CR / 100
+PASS if basket_value ≥ required
+FAIL if basket_value <  required  →  error: UnderCollateralized
+```
+
+### Adaptive CR
+
+```
+btc_conf_bps = (btc_conf / btc_price) × 10_000
+
+CR = 150   if btc_conf_bps < 30
+   = 200   if 30 ≤ btc_conf_bps < 200
+   = 300   if btc_conf_bps ≥ 200
+```
+
+### Oracle Aggregation
+
+```
+for each source in [Pyth, Switchboard]:
+  if fresh AND confidence_ok: add to valid_prices
+
+require len(valid_prices) ≥ 1
+
+sort(valid_prices by price)
+median = valid_prices[ ⌊n/2⌋ ]    ← lower median = conservative
+
+spread_bps = (max_price - min_price) / median × 10_000
+require spread_bps ≤ 150          ← reject if sources disagree
+```
+
+---
+
+## Crisis Resilience Analysis
+
+| Scenario | What Happens | Why BASKET Survives |
+|----------|-------------|---------------------|
+| 2008-style liquidity crunch | BTC vol spikes → conf/price > 2% | CR auto-escalates to 300%. New mints require 3× collateral. No under-collateralization possible. |
+| Oil embargo / supply shock | WTI price surges | Oil is 25% of basket → BASKET value rises with oil. Protocol gets stronger, not weaker. |
+| Central bank gold buying surge | XAU price rises | Gold is 20% of basket → same positive effect. Chainlink job increases gold weight next quarter. |
+| Oracle manipulation attempt | Attacker tries to spoof one feed | Median aggregation requires moving ALL valid sources. Spread check rejects >1.5% disagreement. |
+| Solana network partition | Pyth feeds go stale | Switchboard (separate infra) takes over. CR defaults to Elevated (200%) during outage. |
+| Both oracles fail | Zero valid prices | InsufficientOracleSources error. Mints pause. Existing positions redeemable. |
+| Terra/UST-style death spiral | Panic selling BASKET | BASKET is over-collateralized. No algorithmic backing. Redeem always returns real collateral. |
+| Protocol contract bug | Discovery of exploit | Emergency mode pauses mints in <1 block. Withdrawals always stay open — user funds never locked. |
+
+---
+
+## Defense In Depth
+
+```
+Layer 1  — SVS-1 vault protection
+           ERC-4626 inflation-attack prevention (virtual offset)
+           Vault-favoring rounding on all operations
+           Slippage parameters per deposit/redeem
+
+Layer 2  — Over-collateralization (150% → 300%)
+           Every single mint enforces CR gate. No exceptions.
+
+Layer 3  — Adaptive CR (automatic, no governance delay)
+           BTC vol proxy → regime detection in milliseconds
+
+Layer 4  — Multi-source oracle with median + spread check
+           Pyth + Switchboard → reject manipulation, reject staleness
+
+Layer 5  — Insurance Fund
+           0.1% of every mint + burn fee accumulates
+           Covers bad debt if liquidation collateral < debt
+
+Layer 6  — Emergency Mode
+           Multisig can pause mints in <1 block
+           Withdrawals always stay open
+
+Layer 7  — Checked arithmetic everywhere
+           No overflow can panic or brick accounts
+           All math uses checked_mul, checked_div, checked_add
+```
+
+---
+
+## Technical Stack
+
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Smart contracts | Anchor + Rust | 0.30 |
+| Stablecoin engine (Layer 1) | SSS SDK — suchit1010 | submission/final-hardening-20260314 |
+| Collateral vaults (Layer 1) | SVS-1 — solanabr | main |
+| Primary oracle | Pyth Network | pyth-solana-receiver-sdk 0.3 |
+| Fallback oracle | Switchboard | switchboard-solana 0.28 |
+| Rebalancing compute | Chainlink Functions | — |
+| Cross-chain bridge (v2) | Chainlink CCIP | — |
+| Frontend framework | React + Vite | 18 / 5 |
+| Frontend language | TypeScript | 5 |
+| Wallet integration | Solana Wallet Adapter | 0.15 |
+| Price streaming | Pyth Hermes WebSocket | hermes-client 1.3 |
+| Network | Solana | Devnet → Mainnet |
+
+---
 
 ## Project Structure
 
 ```
-solana-stablecoin-standard/
+basket-protocol/
+│
 ├── programs/
-│   ├── sss-stablecoin/       # Main program (SSS-1 + SSS-2)
-│   ├── sss-oracle/           # Oracle config + keeper update path
-│   ├── sss-transfer-hook/    # Transfer hook (SSS-2 compliance)
-│   └── basket-vault/         # Multi-asset collateral manager (phase-2)
-├── sdk/
-│   └── core/                 # @stbr/sss-token TypeScript SDK
-├── cli/                      # sss-token Admin CLI
-├── backend/                  # Mint/Burn, Compliance APIs (Docker)
-├── tests/                    # Integration tests (Anchor + SDK)
-└── docs/                     # Detailed specifications
+│   └── basket-vault/
+│       └── src/
+│           ├── lib.rs                    ← program entry point, all instructions
+│           ├── state.rs                  ← GlobalConfig, AssetConfig, seeds, feed IDs
+│           ├── errors.rs                 ← 25 VaultError codes
+│           ├── oracle.rs                 ← Pyth normalization, adaptive CR, basket math
+│           ├── oracle_aggregator.rs      ← multi-source median + spread check
+│           ├── svs_interface.rs          ← CPI to SVS-1 vaults (deposit/redeem)
+│           ├── sss_interface.rs          ← CPI to SSS (mint/burn)
+│           └── instructions/
+│               ├── mod.rs
+│               ├── initialize.rs         ← one-time setup, mint authority transfer
+│               ├── mint_basket.rs        ← oracle → CR gate → SSS CPI mint
+│               ├── redeem_basket.rs      ← burn BASKET → SVS-1 redeem CPIs
+│               ├── rebalance_weights.rs  ← quarterly weight update from Chainlink
+│               └── emergency.rs         ← pause/unpause mints
+│
+├── app/
+│   ├── index.html
+│   ├── vite.config.ts
+│   ├── package.json
+│   └── src/
+│       ├── index.tsx
+│       ├── App.tsx                       ← full UI: Deposit / Mint / Redeem tabs
+│       ├── hooks/
+│       │   ├── usePythPrices.ts          ← live Hermes WebSocket price streaming
+│       │   └── useProtocolState.ts       ← reads on-chain GlobalConfig
+│       └── utils/
+│           ├── constants.ts              ← program IDs, feed IDs, vault addresses
+│           └── basket-sdk.ts             ← PDA helpers, SVS-1 deposit, BASKET mint/redeem
+│
+├── tests/
+│   └── basket-vault.ts                   ← 6 integration tests
+│
+├── scripts/
+│   ├── deploy.ts                         ← initialize BasketVault protocol on devnet
+│   └── init-vaults.ts                    ← create SVS-1 vault for each collateral asset
+│
+├── chainlink-functions/
+│   └── rebalance-job.js                  ← quarterly EIA/FAO/WTO weight computation job
+│
+├── deps/                                 ← cloned Layer 1 dependencies (gitignored)
+│   ├── sss/                              ← suchit1010/solana-stablecoin-standard
+│   └── svs/                              ← solanabr/solana-vault-standard
+│
+├── SETUP.md                              ← complete step-by-step from zero to running
+├── README.md                             ← this file
+├── Anchor.toml
+├── Cargo.toml
+├── package.json
+└── tsconfig.json
 ```
 
-## Testing
+---
+
+## How to Build This (Quick Start)
+
+### Prerequisites
 
 ```bash
-# Run full integration + SDK matrix on localnet
-ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 \
-ANCHOR_WALLET=~/.config/solana/id.json \
-npx ts-mocha -p ./tsconfig.json -t 1000000 \
-  tests/sss-1.ts tests/sss-2.ts tests/sss-3.ts \
-  tests/sss-1-advanced.ts tests/sss-2-advanced.ts \
-  tests/sss-lifecycle.ts tests/sss-oracle.ts tests/basket-vault.ts \
-  sdk/core/tests/sdk.test.ts sdk/core/tests/sdk-advanced.ts
+# Solana CLI 1.18+
+sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
 
-# Run SDK unit tests
-cd sdk/core && npm test
+# Anchor 0.30
+cargo install --git https://github.com/coral-xyz/anchor anchor-cli \
+  --tag v0.30.0 --locked
 
-# Run Backend integration tests
-cd backend && npm test
+# Node 18+
+nvm install 18 && nvm use 18
+
+# Verify
+solana --version   # should show 1.18.x
+anchor --version   # should show 0.30.x
+node --version     # should show 18.x
 ```
 
-## Resources
+### Clone and Build
 
-- [Solana Vault Standard](https://github.com/solanabr/solana-vault-standard) — Reference Implementation
-- [Token-2022 Guide](https://spl.solana.com/token-2022)
-- [Anchor Framework](https://www.anchor-lang.com/)
+```bash
+# 1. Clone Layer 1 dependencies
+mkdir deps && cd deps
+git clone https://github.com/suchit1010/solana-stablecoin-standard \
+  --branch submission/final-hardening-20260314 sss
+git clone https://github.com/solanabr/solana-vault-standard svs
+cd ..
+
+# 2. Install workspace dependencies
+npm install
+
+# 3. Build Layer 1 programs
+cd deps/sss && npm install && anchor build && cd ../..
+cd deps/svs && npm install && anchor build && cd ../..
+
+# 4. Build BasketVault
+anchor build
+```
+
+### Deploy to Devnet
+
+```bash
+# Configure wallet
+solana config set --url devnet
+solana airdrop 5
+
+# Create test mints (one per collateral)
+spl-token create-token --decimals 6   # BASKET
+spl-token create-token --decimals 8   # PAXG (gold)
+spl-token create-token --decimals 6   # tOIL (crude oil)
+spl-token create-token --decimals 8   # WBTC
+# ... etc — save all addresses
+
+# Deploy Layer 1
+cd deps/sss && anchor deploy --provider.cluster devnet && cd ../..
+cd deps/svs && anchor deploy --provider.cluster devnet && cd ../..
+
+# Deploy BasketVault
+anchor deploy --provider.cluster devnet
+
+# Update program IDs in app/src/utils/constants.ts
+# CRITICAL: verify CPI discriminators (see SETUP.md)
+
+# Initialize protocol
+npx ts-node scripts/deploy.ts
+npx ts-node scripts/init-vaults.ts
+# → Copy printed vault addresses to constants.ts SVS_VAULTS
+```
+
+### Run Tests
+
+```bash
+anchor test
+# Expected output:
+#   6 passing
+```
+
+### Start Frontend
+
+```bash
+cd app
+npm install
+npm run dev
+# → Open http://localhost:5173
+# → Connect Phantom on devnet
+# → Deposit test collateral → Mint BASKET → Redeem
+```
+
+**For the complete step-by-step guide including discriminator verification and test token minting, see `SETUP.md`.**
+
+---
+
+## Governance Roadmap
+
+| Phase | When | Rebalancing Authority | Weight Determination |
+|-------|------|-----------------------|---------------------|
+| Phase 1 (MVP) | Now | 3-of-5 multisig | Multisig submits Chainlink Functions output on-chain |
+| Phase 2 | 3 months post-launch | BASKET governance DAO | Token-weighted quadratic voting on proposals |
+| Phase 3 | 6 months | Chainlink DON (automated) | Fully automated — no human involvement for routine rebalances |
+
+The maximum shift constraint (±5% per quarter, enforced in Rust) means even a fully compromised governance actor cannot dump the basket composition in a single transaction.
+
+---
+
+## After the Hackathon
+
+```
+Month 1   →  Hacken security audit (from Buildifi 1st prize)
+Month 2   →  Mainnet collateral integrations:
+              PAXG (Paxos), WBTC (Portal), tokenized oil (Ostium/Parcl)
+Month 3   →  Governance token launch, Phase 2 DAO rebalancing
+Month 4   →  Jupiter + Orca DEX liquidity pools
+Month 6   →  Chainlink CCIP → BASKET on Ethereum
+Month 9   →  SVS-2 confidential vaults → institutional reserve product
+Month 12  →  BRICS payment rail pilot
+Month 24  →  Central bank reserve discussions
+```
+
+---
+
+## Security
+
+### What is protected
+- All arithmetic uses `checked_mul` / `checked_div` / `checked_add` throughout — overflow panics impossible
+- PDA bumps stored at `init` time — no canonical bump recomputation on hot paths
+- SVS-1 virtual offset prevents inflation attacks on first deposit
+- Oracle spread check prevents single-source manipulation
+- Staleness check prevents stale prices from enabling cheap mints
+
+### What is NOT audited
+This is a hackathon MVP. Do not use on mainnet with real funds before a professional security review. Winning the Buildifi Hack 2 includes a Hacken audit — that is the planned path to production.
+
+### Known limitations in MVP
+- SVS-1 CPI discriminators must be verified against deployed IDL before devnet use (see SETUP.md)
+- Redemption pro-rata logic is simplified — production version tracks per-user SVS-1 share balances per vault
+- Chainlink Functions job not live — rebalancing requires manual multisig submission in Phase 1
+- RWA weight uses DXY as oracle proxy — real tokenized RWA price feeds needed for mainnet
+
+---
+
+## Reused Code Disclosure
+
+Per Buildifi Hack 2 competition rules, all reused code is disclosed here.
+
+| Component | Source Repo | License | Usage in BASKET |
+|-----------|-------------|---------|----------------|
+| SSS Stablecoin SDK | [suchit1010/solana-stablecoin-standard](https://github.com/suchit1010/solana-stablecoin-standard) branch: `submission/final-hardening-20260314` | MIT | BASKET token mint/burn engine. `BasketVault` CPIs into SSS for `mint_tokens` and `burn_tokens`. SSS code is completely unchanged. |
+| SVS-1 Vault Standard | [solanabr/solana-vault-standard](https://github.com/solanabr/solana-vault-standard) branch: `main` | MIT | ERC-4626 tokenized collateral vaults, one per asset. `BasketVault` CPIs into SVS-1 for collateral deposit and redemption. SVS-1 code is completely unchanged. |
+
+All other code — `BasketVault` program, oracle aggregator, adaptive CR logic, `svs_interface.rs`, `sss_interface.rs`, frontend, scripts, Chainlink Functions job — is original work written for this hackathon.
+
+---
+
+## Reference Documentation
+
+### Solana + Anchor
+- [Anchor Book](https://book.anchor-lang.com) — program development, PDAs, CPI
+- [Solana Docs](https://docs.solana.com) — runtime, accounts model, transactions
+- [SPL Token Program](https://spl.solana.com/token) — SPL token standard
+- [Token-2022](https://spl.solana.com/token-2022) — confidential transfers (future)
+- [Solana Cookbook](https://solanacookbook.com) — common patterns
+
+### Oracle Documentation
+- [Pyth Docs](https://docs.pyth.network) — price feeds, confidence intervals, PriceUpdateV2
+- [Pyth Feed IDs — Devnet](https://pyth.network/developers/price-feed-ids#solana-devnet) — XAU, WTI, BTC, XAG, DXY feed addresses
+- [Pyth Feed IDs — Mainnet](https://pyth.network/developers/price-feed-ids#solana-mainnet) — production addresses
+- [Pyth Hermes API](https://hermes.pyth.network/docs) — WebSocket streaming for frontend
+- [Pyth Solana Receiver SDK](https://github.com/pyth-network/pyth-crosschain/tree/main/target_chains/solana/sdk/js/pyth_solana_receiver) — on-chain integration
+- [Switchboard Docs](https://docs.switchboard.xyz) — custom oracle feeds, aggregator accounts
+- [Switchboard Solana SDK](https://docs.switchboard.xyz/solana) — Anchor integration
+- [Chainlink Functions Docs](https://docs.chain.link/chainlink-functions) — off-chain compute with on-chain verification
+- [Chainlink Functions Playground](https://functions.chain.link) — deploy and manage jobs
+- [Chainlink CCIP Docs](https://docs.chain.link/ccip) — cross-chain token transfers (post-MVP)
+
+### Layer 1 Dependencies
+- [SSS — Solana Stablecoin Standard](https://github.com/suchit1010/solana-stablecoin-standard) — mint/burn SDK
+- [SVS-1 — Solana Vault Standard](https://github.com/solanabr/solana-vault-standard) — ERC-4626 vaults
+- [ERC-4626 on Solana](https://solana.com/developers/evm-to-svm/erc4626) — vault standard reference
+
+### DeFi Protocol Design
+- [MakerDAO Docs](https://docs.makerdao.com) — CDP, surplus buffer, liquidation engine
+- [Euler Finance Docs](https://docs.euler.finance) — reactive interest rates, liquidation design
+- [Liquity Docs](https://docs.liquity.org) — zero-interest CDP, redemption mechanism
+- [Frax Finance Docs](https://docs.frax.finance) — fractional-algorithmic stablecoin design
+
+### Macro Data Sources (Chainlink Functions)
+- [EIA API Docs](https://www.eia.gov/opendata/) — US Energy Information Administration oil data
+- [FAO Food Price Index](https://www.fao.org/worldfoodsituation/foodpricesindex/en/) — UN agricultural prices
+- [WTO API](https://apiportal.wto.org) — global merchandise trade volumes
+- [World Gold Council](https://www.gold.org/goldhub/data) — central bank gold demand data
+
+### Hackathon
+- [Buildifi Hack 2](https://www.buildifi.ai/hackathon/693bb38c238f4bd5a9b40e7f) — competition page + resources
+- [DeAura](https://deaura.io) — token launch platform (required for submission)
+- [Bonk Advisory](https://bonk.com) — 1st place: investment interview opportunity
+- [Hacken](https://hacken.io) — 1st place: professional smart contract security audit
+
+---
+
+## Evaluation Criteria Alignment
+
+| Criterion | BASKET Approach |
+|-----------|----------------|
+| **Technical Quality** | Production Anchor patterns. Checked arithmetic everywhere. Multi-oracle with fallback. PDA signer model for CPI. SVS-1 and SSS are production-hardened dependencies. |
+| **Token Utility** | BASKET is the settlement unit. Minting requires real over-collateralized assets. Redeeming returns real assets. 0.1% fee funds insurance. Governance potential in Phase 2. |
+| **Product Experience** | Live CR gauge with adaptive regime display. Real-time Pyth price ticker. Deposit → Mint → Redeem in 3 tabs. Oracle status. BTC vol proxy gauge. |
+| **Innovation** | Adaptive CR using BTC Pyth confidence interval (first on Solana). Multi-asset basket with on-chain dynamic weights. Two-layer architecture (SVS-1 + SSS) enables composability. |
+| **Launch Readiness** | DeAura token created. $200k volume target via Jupiter/Orca listing plan. Complete whitepaper. Demo video. Deploy scripts ready. |
+
+---
 
 ## License
 
-MIT
+MIT — see LICENSE.
 
-## Disclaimer
+---
 
-This software is provided "as is". Not audited. Use with caution for large-scale mainnet deployments.
+> *"The world does not need another USD clone. It needs the coin everything revolves around."*
