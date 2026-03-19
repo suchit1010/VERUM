@@ -24,20 +24,20 @@ function publicKeyFromEnv(name: string, fallback: string): PublicKey {
 
 // After `anchor deploy`, copy program IDs here
 const BASKET_VAULT_ID = publicKeyFromEnv("BASKET_VAULT_ID", "BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP");
-const SSS_PROGRAM_ID  = publicKeyFromEnv("SSS_PROGRAM_ID", "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv");
-const SVS1_PROGRAM_ID = publicKeyFromEnv("SVS1_PROGRAM_ID", "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+const SSS_PROGRAM_ID  = publicKeyFromEnv("SSS_PROGRAM_ID", "HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet");
+const SVS1_PROGRAM_ID = publicKeyFromEnv("SVS1_PROGRAM_ID", "Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC");
 
 // BASKET mint created by SSS deploy — copy here
 const BASKET_MINT     = publicKeyFromEnv("BASKET_MINT", "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv");
 
 // Asset mints (devnet — create test mints with spl-token create-token)
 const ASSET_MINTS = {
-  PAXG: publicKeyFromEnv("ASSET_MINT_XAU", "Eavb8FKNoYPbHnSS8kMi4tnb3ize9ySnmMHKKMHKKMHK"),
-  WTI:  publicKeyFromEnv("ASSET_MINT_WTI", "FNNkznizmC6A7t2sGJGEPM53u1wWfLsTHGqKQsGsBMFV"),
-  BTC:  publicKeyFromEnv("ASSET_MINT_BTC", "HovQMDrbAgAYPCmR4cN8VzQcajF5xqQRBe8EJsF3NPZZ"),
-  XAG:  publicKeyFromEnv("ASSET_MINT_XAG", "Bxnobf4NbUzS8R4VQ6BXRS4KSMnrp9M4BBQnMbnVRYx3"),
-  DXY:  publicKeyFromEnv("ASSET_MINT_DXY", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
-  RWA:  publicKeyFromEnv("ASSET_MINT_RWA", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
+  PAXG: publicKeyFromEnv("ASSET_MINT_XAU", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  WTI:  publicKeyFromEnv("ASSET_MINT_WTI", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  BTC:  publicKeyFromEnv("ASSET_MINT_BTC", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  XAG:  publicKeyFromEnv("ASSET_MINT_XAG", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  DXY:  publicKeyFromEnv("ASSET_MINT_DXY", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  RWA:  publicKeyFromEnv("ASSET_MINT_RWA", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
 };
 
 // Switchboard aggregator stubs (devnet)

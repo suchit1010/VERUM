@@ -19,26 +19,26 @@ export const VERUM_VAULT_PROGRAM_ID = publicKeyFromEnv(
 
 export const SSS_PROGRAM_ID = publicKeyFromEnv(
   "VITE_SSS_PROGRAM_ID",
-  "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv"
+  "HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet"
 );
 
 export const SVS1_PROGRAM_ID = publicKeyFromEnv(
   "VITE_SVS1_PROGRAM_ID",
-  "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+  "Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC"
 );
 
 export const VERUM_MINT = publicKeyFromEnv(
   "VITE_VERUM_MINT",
-  "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv"
+  "B2mN75XtCtTAduTnQe1jTTH2NE9usavMVMPACZbf2s1q"
 );
 
 export const PYTH_ACCOUNTS = {
-  XAU: publicKeyFromEnv("VITE_PYTH_ACCOUNT_XAU", "Eavb8FKNoYPbHnSS8kMi4tnb3ize9ySnmMHKKMHKKMHK"),
-  WTI: publicKeyFromEnv("VITE_PYTH_ACCOUNT_WTI", "FNNkznizmC6A7t2sGJGEPM53u1wWfLsTHGqKQsGsBMFV"),
-  BTC: publicKeyFromEnv("VITE_PYTH_ACCOUNT_BTC", "HovQMDrbAgAYPCmR4cN8VzQcajF5xqQRBe8EJsF3NPZZ"),
-  XAG: publicKeyFromEnv("VITE_PYTH_ACCOUNT_XAG", "Bxnobf4NbUzS8R4VQ6BXRS4KSMnrp9M4BBQnMbnVRYx3"),
-  DXY: publicKeyFromEnv("VITE_PYTH_ACCOUNT_DXY", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
-  RWA: publicKeyFromEnv("VITE_PYTH_ACCOUNT_RWA", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
+  XAU: publicKeyFromEnv("VITE_PYTH_ACCOUNT_XAU", "2rRQq8GhJZ2KKWYJ6oJoqj8iWYoM6yBbKz5gDLV5e6Gz"),
+  WTI: publicKeyFromEnv("VITE_PYTH_ACCOUNT_WTI", "8k7F9XSUeMvjGjB5wkpBPiZv2LpRNHUAhuNdxTF5LNK"),
+  BTC: publicKeyFromEnv("VITE_PYTH_ACCOUNT_BTC", "Gnt27xtC473ZT2Mw5u8wZ68Z3gULk5AJ5YRKG4sp6yEe"),
+  XAG: publicKeyFromEnv("VITE_PYTH_ACCOUNT_XAG", "8k7F9XSUeMvjGjB5wkpBPiZv2LpRNHUAhuNdxTF5LNK"),
+  DXY: publicKeyFromEnv("VITE_PYTH_ACCOUNT_DXY", "Gnt27xtC473ZT2Mw5u8wZ68Z3gULk5AJ5YRKG4sp6yEe"),
+  RWA: publicKeyFromEnv("VITE_PYTH_ACCOUNT_RWA", "Gnt27xtC473ZT2Mw5u8wZ68Z3gULk5AJ5YRKG4sp6yEe"),
 } as const;
 
 export const PYTH_FEED_IDS = {
@@ -51,21 +51,21 @@ export const PYTH_FEED_IDS = {
 } as const;
 
 export const SVS_VAULTS = {
-  XAU: publicKeyFromEnv("VITE_SVS_VAULT_XAU", "Eavb8FKNoYPbHnSS8kMi4tnb3ize9ySnmMHKKMHKKMHK"),
-  WTI: publicKeyFromEnv("VITE_SVS_VAULT_WTI", "FNNkznizmC6A7t2sGJGEPM53u1wWfLsTHGqKQsGsBMFV"),
-  BTC: publicKeyFromEnv("VITE_SVS_VAULT_BTC", "HovQMDrbAgAYPCmR4cN8VzQcajF5xqQRBe8EJsF3NPZZ"),
-  XAG: publicKeyFromEnv("VITE_SVS_VAULT_XAG", "Bxnobf4NbUzS8R4VQ6BXRS4KSMnrp9M4BBQnMbnVRYx3"),
-  DXY: publicKeyFromEnv("VITE_SVS_VAULT_DXY", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
-  RWA: publicKeyFromEnv("VITE_SVS_VAULT_RWA", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
+  XAU: publicKeyFromEnv("VITE_SVS_VAULT_XAU", "vCz7BdbeA6dYSjY1gLzE53v16BM4pSeUkjH1AEKAhgw"),
+  WTI: publicKeyFromEnv("VITE_SVS_VAULT_WTI", "vCz7BdbeA6dYSjY1gLzE53v16BM4pSeUkjH1AEKAhgw"),
+  BTC: publicKeyFromEnv("VITE_SVS_VAULT_BTC", "vCz7BdbeA6dYSjY1gLzE53v16BM4pSeUkjH1AEKAhgw"),
+  XAG: publicKeyFromEnv("VITE_SVS_VAULT_XAG", "vCz7BdbeA6dYSjY1gLzE53v16BM4pSeUkjH1AEKAhgw"),
+  DXY: publicKeyFromEnv("VITE_SVS_VAULT_DXY", "vCz7BdbeA6dYSjY1gLzE53v16BM4pSeUkjH1AEKAhgw"),
+  RWA: publicKeyFromEnv("VITE_SVS_VAULT_RWA", "vCz7BdbeA6dYSjY1gLzE53v16BM4pSeUkjH1AEKAhgw"),
 } as const;
 
 export const ASSET_MINTS = {
-  XAU: publicKeyFromEnv("VITE_ASSET_MINT_XAU", "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv"),
-  WTI: publicKeyFromEnv("VITE_ASSET_MINT_WTI", "Eavb8FKNoYPbHnSS8kMi4tnb3ize9ySnmMHKKMHKKMHK"),
-  BTC: publicKeyFromEnv("VITE_ASSET_MINT_BTC", "HovQMDrbAgAYPCmR4cN8VzQcajF5xqQRBe8EJsF3NPZZ"),
-  XAG: publicKeyFromEnv("VITE_ASSET_MINT_XAG", "Bxnobf4NbUzS8R4VQ6BXRS4KSMnrp9M4BBQnMbnVRYx3"),
-  DXY: publicKeyFromEnv("VITE_ASSET_MINT_DXY", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
-  RWA: publicKeyFromEnv("VITE_ASSET_MINT_RWA", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"),
+  XAU: publicKeyFromEnv("VITE_ASSET_MINT_XAU", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  WTI: publicKeyFromEnv("VITE_ASSET_MINT_WTI", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  BTC: publicKeyFromEnv("VITE_ASSET_MINT_BTC", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  XAG: publicKeyFromEnv("VITE_ASSET_MINT_XAG", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  DXY: publicKeyFromEnv("VITE_ASSET_MINT_DXY", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  RWA: publicKeyFromEnv("VITE_ASSET_MINT_RWA", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
 } as const;
 
 export const REGISTRY_ORDER = ["XAU", "WTI", "BTC", "XAG", "DXY", "RWA"] as const;

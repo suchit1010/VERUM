@@ -5,7 +5,7 @@
 
 import * as anchor from "@coral-xyz/anchor";
 import { Connection, PublicKey, Keypair, clusterApiUrl, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
 import { readFileSync } from "fs";
 import { homedir } from "os";
 import path from "path";
@@ -22,29 +22,28 @@ function publicKeyFromEnv(name: string, fallback: string): PublicKey {
   }
 }
 
-const SVS1_ID = publicKeyFromEnv("SVS1_PROGRAM_ID", "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+const SVS1_ID = publicKeyFromEnv("SVS1_PROGRAM_ID", "Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC");
 
 // Collateral mints (devnet test mints)
 const ASSETS = [
-  { key: "PAXG", mint: publicKeyFromEnv("ASSET_MINT_XAU", "Eavb8FKNoYPbHnSS8kMi4tnb3ize9ySnmMHKKMHKKMHK"), decimals: 8 },
-  { key: "tOIL", mint: publicKeyFromEnv("ASSET_MINT_WTI", "FNNkznizmC6A7t2sGJGEPM53u1wWfLsTHGqKQsGsBMFV"), decimals: 6 },
-  { key: "WBTC", mint: publicKeyFromEnv("ASSET_MINT_BTC", "HovQMDrbAgAYPCmR4cN8VzQcajF5xqQRBe8EJsF3NPZZ"), decimals: 8 },
-  { key: "XAG", mint: publicKeyFromEnv("ASSET_MINT_XAG", "Bxnobf4NbUzS8R4VQ6BXRS4KSMnrp9M4BBQnMbnVRYx3"), decimals: 8 },
-  { key: "DXY", mint: publicKeyFromEnv("ASSET_MINT_DXY", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"), decimals: 6 },
-  { key: "RWA", mint: publicKeyFromEnv("ASSET_MINT_RWA", "GcGkMqiKoGCDT5T4tFmJzFVCKCGXJFBrFn5bKmEMEqaS"), decimals: 6 },
+  { key: "XAU", mint: publicKeyFromEnv("ASSET_MINT_XAU", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 8, vaultId: 0 },
+  { key: "WTI", mint: publicKeyFromEnv("ASSET_MINT_WTI", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6, vaultId: 1 },
+  { key: "BTC", mint: publicKeyFromEnv("ASSET_MINT_BTC", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 8, vaultId: 2 },
+  { key: "XAG", mint: publicKeyFromEnv("ASSET_MINT_XAG", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 8, vaultId: 3 },
+  { key: "DXY", mint: publicKeyFromEnv("ASSET_MINT_DXY", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6, vaultId: 4 },
+  { key: "RWA", mint: publicKeyFromEnv("ASSET_MINT_RWA", "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6, vaultId: 5 },
 ];
 
 async function initVault(
-  program:    anchor.Program,
-  wallet:     Keypair,
-  assetMint:  PublicKey,
-  vaultId:    number = 0,
+  program: anchor.Program,
+  wallet:  Keypair,
+  asset:   { key: string; mint: PublicKey; decimals: number; vaultId: number },
 ) {
   const idBuf = Buffer.alloc(8);
-  idBuf.writeBigUInt64LE(BigInt(vaultId));
+  idBuf.writeBigUInt64LE(BigInt(asset.vaultId));
 
   const [vault] = PublicKey.findProgramAddressSync(
-    [Buffer.from("vault"), assetMint.toBuffer(), idBuf],
+    [Buffer.from("vault"), asset.mint.toBuffer(), idBuf],
     SVS1_ID
   );
 
@@ -53,37 +52,40 @@ async function initVault(
     SVS1_ID
   );
 
-  const [vaultTokenAccount] = PublicKey.findProgramAddressSync(
-    [Buffer.from("vault_token"), vault.toBuffer()],
-    SVS1_ID
-  );
-
-  const [tokenOwnerPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("token_account_owner_pda"), vault.toBuffer()],
-    SVS1_ID
+  const assetVault = await getAssociatedTokenAddress(
+    asset.mint,
+    vault,
+    true  // allowOwnerOffCurve
   );
 
   console.log(`  Vault PDA: ${vault.toBase58()}`);
+  console.log(`  Shares Mint: ${sharesMint.toBase58()}`);
+  console.log(`  Asset Vault: ${assetVault.toBase58()}`);
 
   // SVS-1 initialize discriminator: sha256("global:initialize")[0..8]
   const DISC = Buffer.from([0xaf, 0xaf, 0x6d, 0x1f, 0x0d, 0x98, 0x9b, 0xed]);
 
-  const vaultIdBN = new anchor.BN(vaultId);
+  const vaultIdBN = new anchor.BN(asset.vaultId);
 
   try {
     const tx = await (program.methods as any)
-      .initialize(vaultIdBN)
+      .initialize(
+        vaultIdBN,
+        `${asset.key} Vault`,  // name
+        `v${asset.key}`,       // symbol
+        ""                     // uri
+      )
       .accounts({
+        authority: wallet.publicKey,
         vault,
+        assetMint: asset.mint,
         sharesMint,
-        vaultTokenAccount,
-        tokenOwnerPda,
-        assetMint,
-        authority:     wallet.publicKey,
-        payer:         wallet.publicKey,
-        tokenProgram:  TOKEN_PROGRAM_ID,
+        assetVault,
+        assetTokenProgram: new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
+        token2022Program: new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"),
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-        rent:          SYSVAR_RENT_PUBKEY,
+        rent: SYSVAR_RENT_PUBKEY,
       })
       .rpc();
 
@@ -125,8 +127,7 @@ async function main() {
     const vault = await initVault(
       svs1Program,
       wallet,
-      asset.mint,
-      0,
+      asset,
     );
     vaultAddresses[asset.key] = vault.toBase58();
   }

@@ -144,6 +144,39 @@ User wallet
 
 ---
 
+## Current Deployment Status (Devnet)
+
+As of March 20, 2026, BASKET is deployed and operational on Solana Devnet:
+
+### Programs Deployed
+- **SSS Stablecoin SDK**: `HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet` ([Solscan](https://solscan.io/account/HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet?cluster=devnet))
+- **SSS Transfer Hook**: `6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN` ([Solscan](https://solscan.io/account/6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN?cluster=devnet))
+- **SVS-1 Vault Standard**: `Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC` ([Solscan](https://solscan.io/account/Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC?cluster=devnet))
+- **BasketVault**: `BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP` ([Solscan](https://solscan.io/account/BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP?cluster=devnet))
+
+### Tokens Minted
+- **BASKET**: `B2mN75XtCtTAduTnQe1jTTH2NE9usavMVMPACZbf2s1q` (6 decimals, supply: 0)
+
+### Protocol State
+- **GlobalConfig PDA**: `9YjD3CT7Fd8E9dFbtx7TDWESsV6BMtURJr4oBXwQskPo`
+- **VaultAuthority PDA**: `EmW8XrqKa8XHKiYR3b7m9ucShwmwKpDeahiApdhYJ8zF`
+- **Collateral Ratio**: 150% (Normal regime - BTC conf/price < 0.30%)
+- **Emergency Mode**: Disabled
+
+### Frontend
+- **Dev Server**: Running on `http://localhost:5177`
+- **Wallet Integration**: Phantom on devnet
+- **Features**: Deposit/Mint/Redeem UI, live Pyth price streaming
+
+### Next Steps
+- Initialize SVS-1 collateral vaults for each asset
+- Update `constants.ts` with vault PDA addresses
+- Run end-to-end deposit → mint → redeem tests
+- Integrate live oracle feeds
+- Record demo video for judging
+
+---
+
 ## Basket Composition
 
 Initial weights mirror 2026 global trade flows. Rebalanced quarterly via Chainlink Functions.
