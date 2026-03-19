@@ -12,14 +12,14 @@ function publicKeyFromEnv(envName: string, fallback: string): PublicKey {
   }
 }
 
-export const BASKET_VAULT_PROGRAM_ID = publicKeyFromEnv(
-  "VITE_BASKET_VAULT_PROGRAM_ID",
-  "6G1N31NpMwodAgcF4hgMT9JPmzxELdeUGe66xEPssEht"
+export const VERUM_VAULT_PROGRAM_ID = publicKeyFromEnv(
+  "VITE_VERUM_VAULT_PROGRAM_ID",
+  "BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP"
 );
 
 export const SSS_PROGRAM_ID = publicKeyFromEnv(
   "VITE_SSS_PROGRAM_ID",
-  "So11111111111111111111111111111111111111112"
+  "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv"
 );
 
 export const SVS1_PROGRAM_ID = publicKeyFromEnv(
@@ -27,9 +27,9 @@ export const SVS1_PROGRAM_ID = publicKeyFromEnv(
   "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
 );
 
-export const BASKET_MINT = publicKeyFromEnv(
-  "VITE_BASKET_MINT",
-  "So11111111111111111111111111111111111111112"
+export const VERUM_MINT = publicKeyFromEnv(
+  "VITE_VERUM_MINT",
+  "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv"
 );
 
 export const PYTH_ACCOUNTS = {
@@ -60,7 +60,7 @@ export const SVS_VAULTS = {
 } as const;
 
 export const ASSET_MINTS = {
-  XAU: publicKeyFromEnv("VITE_ASSET_MINT_XAU", "So11111111111111111111111111111111111111112"),
+  XAU: publicKeyFromEnv("VITE_ASSET_MINT_XAU", "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv"),
   WTI: publicKeyFromEnv("VITE_ASSET_MINT_WTI", "Eavb8FKNoYPbHnSS8kMi4tnb3ize9ySnmMHKKMHKKMHK"),
   BTC: publicKeyFromEnv("VITE_ASSET_MINT_BTC", "HovQMDrbAgAYPCmR4cN8VzQcajF5xqQRBe8EJsF3NPZZ"),
   XAG: publicKeyFromEnv("VITE_ASSET_MINT_XAG", "Bxnobf4NbUzS8R4VQ6BXRS4KSMnrp9M4BBQnMbnVRYx3"),

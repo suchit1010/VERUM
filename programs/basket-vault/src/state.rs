@@ -61,7 +61,7 @@ pub struct GlobalConfig {
 
 impl GlobalConfig {
     // 8 disc + fields + Vec<AssetConfig> * 6 (~180 bytes each)
-    pub const LEN: usize = 8 + 32 * 5 + 1 + 8 + 8 + 1 + 8 + 32 + 4 + (6 * 200);
+    pub const LEN: usize = 1360;
 }
 
 /// User Collateralized Debt Position (CDP)
@@ -85,8 +85,7 @@ impl UserPosition {
 
         (self.collateral_value as u128)
             .checked_mul(10_000)
-            .unwrap()
-            .checked_div(self.debt as u128)
-            .unwrap() as u64
+            .and_then(|v| v.checked_div(self.debt as u128))
+            .unwrap_or(u64::MAX) as u64
     }
 }

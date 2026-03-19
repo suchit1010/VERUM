@@ -21,7 +21,7 @@ use instructions::rebalance_weights::*;
 use instructions::emergency::*;
 use instructions::liquidate::*;
 
-declare_id!("HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB");
+declare_id!("BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP");
 
 #[program]
 pub mod basket_vault {

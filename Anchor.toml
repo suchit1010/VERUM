@@ -1,15 +1,20 @@
 [toolchain]
-anchor_version = "0.32.1"
+anchor_version = "0.31.0"
 
 [features]
 resolution = true
 skip-lint = false
 
+[workspace]
+members = [
+    "programs/*"
+]
+
 [programs.localnet]
-basket_vault = "HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB"
+basket_vault = "BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP"
 
 [programs.devnet]
-basket_vault = "HJBBV5qRL9wQ1YmPtcPNESpEJJLVt9SyCnofmKi2PUCB"
+basket_vault = "BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP"
 
 [registry]
 url = "https://api.apr.dev"

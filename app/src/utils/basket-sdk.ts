@@ -1,5 +1,5 @@
 // app/src/utils/basket-sdk.ts
-// Full production Solana integration for BasketVault + SVS-1 + SSS
+// Full production Solana integration for VerumVault + SVS-1 + SSS
 
 import {
   Connection, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY,
@@ -10,8 +10,8 @@ import {
   createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import {
-  BASKET_VAULT_PROGRAM_ID, SVS1_PROGRAM_ID, SSS_PROGRAM_ID,
-  BASKET_MINT, PYTH_ACCOUNTS, SVS_VAULTS, ASSET_MINTS,
+  VERUM_VAULT_PROGRAM_ID, SVS1_PROGRAM_ID, SSS_PROGRAM_ID,
+  VERUM_MINT, PYTH_ACCOUNTS, SVS_VAULTS, ASSET_MINTS,
   REGISTRY_ORDER, SEEDS,
 } from "./constants";
 
@@ -38,20 +38,20 @@ function toRegistryAssetKey(assetKey: string): RegistryAssetKey {
 
 export function getGlobalConfigPDA(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [SEEDS.GLOBAL_CONFIG], BASKET_VAULT_PROGRAM_ID
+    [SEEDS.GLOBAL_CONFIG], VERUM_VAULT_PROGRAM_ID
   );
 }
 
 export function getVaultAuthorityPDA(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [SEEDS.VAULT_AUTH], BASKET_VAULT_PROGRAM_ID
+    [SEEDS.VAULT_AUTH], VERUM_VAULT_PROGRAM_ID
   );
 }
 
 export function getUserPositionPDA(user: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [SEEDS.USER_POSITION, user.toBuffer()],
-    BASKET_VAULT_PROGRAM_ID
+    VERUM_VAULT_PROGRAM_ID
   );
 }
 
@@ -89,7 +89,7 @@ export function getSvsTokenOwnerPDA(vault: PublicKey): [PublicKey, number] {
 // ── Protocol state ────────────────────────────────────────────────────────────
 
 export interface ProtocolState {
-  totalMinted:     number;   // BASKET supply (6 dec → human)
+  totalMinted:     number;   // VERUM supply (6 dec → human)
   insuranceFund:   number;   // USD
   emergencyMode:   boolean;
   weights:         number[]; // bps per asset
@@ -118,7 +118,7 @@ export async function fetchProtocolState(
 }
 
 // ── Deposit into SVS-1 vault (user calls SVS-1 directly) ─────────────────────
-// BasketVault reads collateral from SVS-1 vaults.
+// VerumVault reads collateral from SVS-1 vaults.
 // Users interact with SVS-1 directly to deposit/withdraw collateral.
 // This helper builds the SVS-1 deposit transaction.
 
@@ -184,23 +184,23 @@ export async function buildSvsDepositTx(
   return tx;
 }
 
-// ── Mint BASKET ───────────────────────────────────────────────────────────────
+// ── Mint VERUM ───────────────────────────────────────────────────────────────
 
 export async function buildMintBasketTx(
   connection:    Connection,
   program:       Program,
   wallet:        PublicKey,
-  desiredAmount: number,  // human-readable BASKET to mint
+  desiredAmount: number,  // human-readable VERUM to mint
 ) {
   const [globalConfig]    = getGlobalConfigPDA();
   const [vaultAuthority]  = getVaultAuthorityPDA();
   const [userPosition]    = getUserPositionPDA(wallet);
   const desiredRaw        = new BN(Math.floor(desiredAmount * 1e6));
 
-  const userBasketAta = await getAssociatedTokenAddress(BASKET_MINT, wallet);
-  const basketAtaInfo = await connection.getAccountInfo(userBasketAta);
+  const userVerumAta = await getAssociatedTokenAddress(VERUM_MINT, wallet);
+  const basketAtaInfo = await connection.getAccountInfo(userVerumAta);
   const preIxs = basketAtaInfo ? [] : [
-    createAssociatedTokenAccountInstruction(wallet, userBasketAta, wallet, BASKET_MINT)
+    createAssociatedTokenAccountInstruction(wallet, userVerumAta, wallet, VERUM_MINT)
   ];
 
   // remaining_accounts:
@@ -246,8 +246,8 @@ export async function buildMintBasketTx(
       user:              wallet,
       globalConfig,
       vaultAuthority,
-      basketMint:        BASKET_MINT,
-      userBasketAccount: userBasketAta,
+      basketMint:        VERUM_MINT,
+      userVerumAccount: userVerumAta,
       userPosition,
       sssProgram:        SSS_PROGRAM_ID,
       tokenProgram:      TOKEN_PROGRAM_ID,
@@ -262,7 +262,7 @@ export async function buildMintBasketTx(
   return fullTx;
 }
 
-// ── Redeem BASKET ─────────────────────────────────────────────────────────────
+// ── Redeem VERUM ─────────────────────────────────────────────────────────────
 
 export async function buildRedeemBasketTx(
   program:       Program,
@@ -275,7 +275,7 @@ export async function buildRedeemBasketTx(
   const amountRaw        = new BN(Math.floor(basketAmount * 1e6));
   const minAssetsZero    = REGISTRY_ORDER.map(() => new BN(0)); // no slippage guard for MVP
 
-  const userBasketAta = await getAssociatedTokenAddress(BASKET_MINT, wallet);
+  const userVerumAta = await getAssociatedTokenAddress(VERUM_MINT, wallet);
 
   // Build remaining_accounts: 6 accounts × N assets
   const remainingAccounts = [];
@@ -304,8 +304,8 @@ export async function buildRedeemBasketTx(
       user:              wallet,
       globalConfig,
       vaultAuthority,
-      basketMint:        BASKET_MINT,
-      userBasketAccount: userBasketAta,
+      basketMint:        VERUM_MINT,
+      userVerumAccount: userVerumAta,
       userPosition,
       sssProgram:        SSS_PROGRAM_ID,
       svsProgramAccount: SVS1_PROGRAM_ID,

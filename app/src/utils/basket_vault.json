@@ -1,0 +1,1157 @@
+{
+  "address": "BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP",
+  "metadata": {
+    "name": "basket_vault",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "VERUM: Resilient Multi-Asset Stablecoin Protocol on Solana"
+  },
+  "instructions": [
+    {
+      "name": "initialize",
+      "docs": [
+        "One-time setup. Transfers BASKET mint authority to vault PDA."
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "deployer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "basket_mint",
+          "docs": [
+            "BASKET SPL mint — deployer is current mint authority"
+          ],
+          "writable": true
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_authority",
+          "docs": [
+            "Vault authority PDA — will become BASKET mint authority"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  115,
+                  107,
+                  101,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "cfg",
+          "type": {
+            "defined": {
+              "name": "InitConfig"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "liquidate",
+      "docs": [
+        "Execute a graduated liquidation against an undercollateralized position."
+      ],
+      "discriminator": [
+        223,
+        179,
+        226,
+        125,
+        48,
+        46,
+        39,
+        74
+      ],
+      "accounts": [
+        {
+          "name": "liquidator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "target_position",
+          "writable": true
+        },
+        {
+          "name": "liquidator_basket_account",
+          "docs": [
+            "The token account holding the BASKET tokens the liquidator is repaying"
+          ],
+          "writable": true
+        },
+        {
+          "name": "basket_mint",
+          "writable": true
+        },
+        {
+          "name": "insurance_fund",
+          "docs": [
+            "The insurance fund BASKET/USDC repository"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "repay_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "mint_basket",
+      "docs": [
+        "Mint BASKET against deposited SVS-1 collateral.",
+        "",
+        "remaining_accounts (in registry order, repeated twice):",
+        "[0..N]  Pyth PriceUpdateV2 accounts",
+        "[N..2N] SVS-1 vault accounts"
+      ],
+      "discriminator": [
+        41,
+        184,
+        119,
+        7,
+        57,
+        187,
+        242,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  115,
+                  107,
+                  101,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "basket_mint",
+          "writable": true
+        },
+        {
+          "name": "user_basket_account",
+          "writable": true
+        },
+        {
+          "name": "user_position",
+          "docs": [
+            "User's CDP position tracking (debt + collateral ratio)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sss_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "desired_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "rebalance_weights",
+      "docs": [
+        "Submit quarterly Chainlink Functions weight proposal.",
+        "Caller must be rebalance_authority."
+      ],
+      "discriminator": [
+        90,
+        203,
+        119,
+        8,
+        120,
+        174,
+        3,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "rebalance_authority",
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "proposal",
+          "type": {
+            "defined": {
+              "name": "WeightProposal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "redeem_basket",
+      "docs": [
+        "Burn BASKET → redeem pro-rata collateral from SVS-1 vaults.",
+        "Always available — even in emergency mode.",
+        "",
+        "remaining_accounts per asset (6 × N assets):",
+        "svs_vault, user_asset_account, vault_asset_account,",
+        "user_shares_account, shares_mint, token_owner_pda"
+      ],
+      "discriminator": [
+        37,
+        133,
+        222,
+        57,
+        189,
+        160,
+        151,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  115,
+                  107,
+                  101,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "basket_mint",
+          "writable": true
+        },
+        {
+          "name": "user_basket_account",
+          "docs": [
+            "User's BASKET account — burned here"
+          ],
+          "writable": true
+        },
+        {
+          "name": "user_position",
+          "docs": [
+            "User's CDP position (updated when they redeem)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sss_program"
+        },
+        {
+          "name": "svs_program"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "basket_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_assets_per_vault",
+          "type": {
+            "vec": "u64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_emergency_mode",
+      "docs": [
+        "Toggle emergency mode. Pauses mints; withdrawals stay open."
+      ],
+      "discriminator": [
+        79,
+        138,
+        190,
+        94,
+        0,
+        162,
+        205,
+        253
+      ],
+      "accounts": [
+        {
+          "name": "emergency_authority",
+          "signer": true
+        },
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  108,
+                  111,
+                  98,
+                  97,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "active",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "GlobalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
+    },
+    {
+      "name": "UserPosition",
+      "discriminator": [
+        251,
+        248,
+        209,
+        245,
+        83,
+        234,
+        17,
+        27
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "EmergencyEvent",
+      "discriminator": [
+        58,
+        86,
+        35,
+        38,
+        218,
+        1,
+        117,
+        209
+      ]
+    },
+    {
+      "name": "LiquidationEvent",
+      "discriminator": [
+        3,
+        13,
+        21,
+        93,
+        173,
+        136,
+        72,
+        144
+      ]
+    },
+    {
+      "name": "MintEvent",
+      "discriminator": [
+        197,
+        144,
+        146,
+        149,
+        66,
+        164,
+        95,
+        16
+      ]
+    },
+    {
+      "name": "MintPositionUpdated",
+      "discriminator": [
+        14,
+        38,
+        224,
+        99,
+        180,
+        120,
+        237,
+        226
+      ]
+    },
+    {
+      "name": "RebalanceEvent",
+      "discriminator": [
+        120,
+        27,
+        117,
+        235,
+        104,
+        42,
+        132,
+        75
+      ]
+    },
+    {
+      "name": "RedeemEvent",
+      "discriminator": [
+        90,
+        114,
+        83,
+        146,
+        212,
+        26,
+        217,
+        59
+      ]
+    },
+    {
+      "name": "UpdatedPositionEvent",
+      "discriminator": [
+        159,
+        26,
+        235,
+        218,
+        244,
+        76,
+        148,
+        59
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidPrice",
+      "msg": "Invalid price from oracle (zero or negative)"
+    },
+    {
+      "code": 6001,
+      "name": "NoValidOracles",
+      "msg": "No valid oracles found or all oracles are stale"
+    },
+    {
+      "code": 6002,
+      "name": "OracleSpreadTooHigh",
+      "msg": "Oracle spread exceeds 1.5% maximum allowable deviation"
+    },
+    {
+      "code": 6003,
+      "name": "PositionNotLiquidatable",
+      "msg": "Position is healthy and cannot be liquidated"
+    }
+  ],
+  "types": [
+    {
+      "name": "AssetConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "docs": [
+              "SPL mint of the collateral token (e.g. PAXG mint)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "svs_vault",
+            "docs": [
+              "Corresponding SVS-1 vault PDA for this asset.",
+              "Seeds (SVS-1): [\"vault\", asset_mint, vault_id_u64_le]",
+              "This is where collateral physically lives."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pyth_feed_id_hex",
+            "docs": [
+              "Pyth PriceUpdateV2 account for this asset"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "switchboard_aggregator",
+            "docs": [
+              "Switchboard AggregatorAccountData — fallback oracle"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "weight_bps",
+            "docs": [
+              "Basket weight in basis points (10_000 = 100%)"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "decimals",
+            "docs": [
+              "SPL token decimals (e.g. PAXG = 8, USDC = 6)"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EmergencyEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "basket_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "sss_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "svs_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "rebalance_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "emergency_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault_authority_bump",
+            "type": "u8"
+          },
+          {
+            "name": "total_minted",
+            "type": "u64"
+          },
+          {
+            "name": "insurance_fund_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "emergency_mode",
+            "type": "bool"
+          },
+          {
+            "name": "last_rebalance_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "last_rebalance_request_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "asset_registry",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AssetConfig"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sss_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "svs_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "rebalance_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "emergency_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset_registry",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AssetConfig"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LiquidationEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position_owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "liquidator",
+            "type": "pubkey"
+          },
+          {
+            "name": "debt_repaid",
+            "type": "u64"
+          },
+          {
+            "name": "penalty_charged",
+            "type": "u64"
+          },
+          {
+            "name": "cr_at_liquidation",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_minted",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "basket_value",
+            "type": "u128"
+          },
+          {
+            "name": "cr_applied",
+            "type": "u16"
+          },
+          {
+            "name": "btc_conf_bps",
+            "type": "u16"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintPositionUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_debt",
+            "type": "u64"
+          },
+          {
+            "name": "new_collateral_value",
+            "type": "u64"
+          },
+          {
+            "name": "new_cr_bps",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RebalanceEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_weights",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "job_ts",
+            "type": "i64"
+          },
+          {
+            "name": "request_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "executed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "basket_burned",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdatedPositionEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "remaining_debt",
+            "type": "u64"
+          },
+          {
+            "name": "new_cr_bps",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserPosition",
+      "docs": [
+        "User Collateralized Debt Position (CDP)",
+        "Each user can have one active position. Tracks debt and collateral value."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "debt",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_value",
+            "type": "u64"
+          },
+          {
+            "name": "cr_bps",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WeightProposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "weights",
+            "type": {
+              "vec": "u16"
+            }
+          },
+          {
+            "name": "job_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "request_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

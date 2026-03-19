@@ -2,13 +2,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Program, AnchorProvider, Idl } from "@coral-xyz/anchor";
-import { BASKET_VAULT_PROGRAM_ID } from "../utils/constants";
+import { VERUM_VAULT_PROGRAM_ID } from "../utils/constants";
 import { fetchProtocolState, getAdaptiveCR, ProtocolState } from "../utils/basket-sdk";
 import { usePythPrices } from "./usePythPrices";
 
+import IDL from '../utils/basket_vault.json';
 // Minimal IDL stub — replace with generated IDL after `anchor build`
 const IDL_STUB: Idl = {
-  address: BASKET_VAULT_PROGRAM_ID.toBase58(),
+  address: VERUM_VAULT_PROGRAM_ID.toBase58(),
   metadata: {
     name: "basket_vault",
     version: "0.1.0",
@@ -42,8 +43,8 @@ export function useProtocolState() {
     });
     // In production: import IDL from "../../target/idl/basket_vault.json"
     const idlWithAddress = {
-      ...IDL_STUB,
-      address: BASKET_VAULT_PROGRAM_ID.toBase58(),
+      ...IDL,
+      address: VERUM_VAULT_PROGRAM_ID.toBase58(),
     };
     const prog = new Program(idlWithAddress as Idl, provider);
     setProgram(prog);

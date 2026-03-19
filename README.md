@@ -1,4 +1,4 @@
-# BASKET — World Reserve Protocol
+# VERUM — World Reserve Protocol
 
 > *The neutral, crisis-resilient reserve currency backed by what the world actually runs on.*
 

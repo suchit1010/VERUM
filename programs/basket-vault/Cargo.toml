@@ -13,8 +13,8 @@ name = "basket_vault"
 [dependencies]
 anchor-lang = { workspace = true, features = ["init-if-needed"] }
 anchor-spl = { workspace = true, features = ["token"] }
-spl-token = "=4.0.0"
-spl-memo = "=4.0.0"
+spl-token = { version = "=5.0.2", features = ["no-entrypoint"] }
+spl-memo = { version = "=6.0.0", features = ["no-entrypoint"] }
 
 # Oracle integrations
 borsh = "1.6"
@@ -31,7 +31,7 @@ anyhow = "1.0"
 tokio = { version = "1", features = ["full"] }
 
 [features]
-default = ["idl-build", "custom-heap"]
+default = []
 no-entrypoint = []
 cpi = ["no-entrypoint"]
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]

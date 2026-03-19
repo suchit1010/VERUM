@@ -5,6 +5,14 @@
 
 ## Programs
 
+Wallet: J9TDFUCfdQaGmzuxshzeu3fR6dxJ4qE5hE6agcbdKCin
+Balance: 1.9985284 SOL
+GlobalConfig PDA: 9YjD3CT7Fd8E9dFbtx7TDWESsV6BMtURJr4oBXwQskPo
+VaultAuthority PDA: EmW8XrqKa8XHKiYR3b7m9ucShwmwKpDeahiApdhYJ8zF
+
+Initializing BasketVault...
+✓ BasketVault initialized. TX: 3UESKP75DRMTvkABWMMBF1k1qzvw3zPWzCqHDAd7PEqMUFxZ2cbXqYy3H7Ad9p7Dnnm8QyuMsT5Q39mT9kMCcPRY                                           
+
 | Program | ID | Solscan |
 |---|---|---|
 | sss-stablecoin | `HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet` | [view](https://solscan.io/account/HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet?cluster=devnet) |

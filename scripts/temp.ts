@@ -23,12 +23,12 @@ function publicKeyFromEnv(name: string, fallback: string): PublicKey {
 }
 
 // After `anchor deploy`, copy program IDs here
-const BASKET_VAULT_ID = publicKeyFromEnv("BASKET_VAULT_ID", "BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP");
-const SSS_PROGRAM_ID  = publicKeyFromEnv("SSS_PROGRAM_ID", "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv");
+const BASKET_VAULT_ID = publicKeyFromEnv("BASKET_VAULT_ID", "6G1N31NpMwodAgcF4hgMT9JPmzxELdeUGe66xEPssEht");
+const SSS_PROGRAM_ID  = publicKeyFromEnv("SSS_PROGRAM_ID", "So11111111111111111111111111111111111111112");
 const SVS1_PROGRAM_ID = publicKeyFromEnv("SVS1_PROGRAM_ID", "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
 // BASKET mint created by SSS deploy — copy here
-const BASKET_MINT     = publicKeyFromEnv("BASKET_MINT", "DmR36BurwkUj9jrN8UpydoNWe3RePZgaeuKgep2XPoXv");
+const BASKET_MINT     = publicKeyFromEnv("BASKET_MINT", "So11111111111111111111111111111111111111112");
 
 // Asset mints (devnet — create test mints with spl-token create-token)
 const ASSET_MINTS = {
@@ -77,7 +77,7 @@ async function main() {
     BASKET_VAULT_ID
   );
 
-  console.log("GlobalConfig PDA:", globalConfig.toBase58());
+  console.log(JSON.stringify({sssProgram: SSS_PROGRAM_ID, svsProgram: SVS1_PROGRAM_ID, rebalanceAuthority: wallet.publicKey, emergencyAuthority: wallet.publicKey, assetRegistry}, null, 2)); process.exit(1);
   console.log("VaultAuthority PDA:", vaultAuthority.toBase58());
 
   // ── Build asset registry ─────────────────────────────────────────────────
@@ -107,7 +107,7 @@ async function main() {
   const WEIGHTS_BPS = [2000, 2500, 1500, 1500, 1500, 1000]; // sum = 10_000
   const DECIMALS    = [8, 6, 8, 8, 6, 6];
 
-  const assetRegistry = Object.entries(ASSET_MINTS).slice(0, 3).map(([, mintStr], i) => ({
+  const assetRegistry = Object.entries(ASSET_MINTS).map(([, mintStr], i) => ({
     mint:                 mintStr,
     svsVault:             SVS_VAULTS[i],
     pythFeedIdHex:        PYTH_FEEDS[i],

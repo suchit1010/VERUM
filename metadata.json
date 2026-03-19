@@ -1,0 +1,12 @@
+{
+  "name": "VERUM",
+  "symbol": "VERUM",
+  "description": "The neutral, crisis-resilient reserve currency backed by what the world actually runs on.",
+  "image": "https://raw.githubusercontent.com/sonisha/verum/main/public/logo.png",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Reserve Currency"
+    }
+  ]
+}
