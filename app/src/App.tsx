@@ -42,8 +42,8 @@ function InnerApp() {
         const mint = ASSET_MINTS[selectedAsset as keyof typeof ASSET_MINTS];
         if (!mint) return;
         
-        const { getAssociatedTokenAddress } = await import('@solana/spl-token');
-        const ata = await getAssociatedTokenAddress(mint, publicKey);
+        const { getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token');
+        const ata = await getAssociatedTokenAddress(mint, publicKey, false, TOKEN_2022_PROGRAM_ID);
         const balance = await connection.getTokenAccountBalance(ata);
         setUserBalance(parseFloat(balance.value.uiAmount?.toString() || '0'));
       } catch (err: any) {
