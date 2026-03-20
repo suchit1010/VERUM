@@ -4,6 +4,9 @@
 //   SSS (suchit1010) → BASKET mint/burn
 //   SVS-1 (solanabr) → ERC-4626 collateral vaults
 
+#![allow(unexpected_cfgs)]
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 
 pub mod errors;

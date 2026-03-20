@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 
 /// Oracle Aggregator & Adaptive CR Math
 /// Based on the VERUM Resilient Stablecoin Specification.
-
 pub struct OraclePrice {
     pub price: u64,       // in micro-USD (1_000_000 = $1.00)
     pub confidence: u64,  // 95% confidence interval
@@ -61,7 +60,7 @@ impl BasketMath {
             }
         }
 
-        require!(valid_prices.len() > 0, BasketError::NoValidOracles);
+        require!(!valid_prices.is_empty(), BasketError::NoValidOracles);
 
         if valid_prices.len() == 1 {
             return Ok(valid_prices[0]);

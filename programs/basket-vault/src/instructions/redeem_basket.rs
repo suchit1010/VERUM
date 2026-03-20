@@ -96,7 +96,7 @@ pub fn handler<'info>(
     // ── 3. Redeem from each SVS-1 vault ───────────────────────────────────
     for i in 0..n {
         let base = i * 6;
-        let svs_vault    = ctx.remaining_accounts[base + 0].clone();
+        let svs_vault    = ctx.remaining_accounts[base].clone();
         let user_assets  = ctx.remaining_accounts[base + 1].clone();
         let vault_assets = ctx.remaining_accounts[base + 2].clone();
         let user_shares  = ctx.remaining_accounts[base + 3].clone();

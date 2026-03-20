@@ -92,8 +92,7 @@ pub fn derive_svs_token_owner(vault: &Pubkey) -> (Pubkey, u8) {
 //   6. user              [signer]
 //   7. token_program     [readonly]
 //   8. system_program    [readonly]
-
-pub fn cpi_deposit<'info>(
+#[allow(clippy::too_many_arguments)]pub fn cpi_deposit<'info>(
     vault:          AccountInfo<'info>,
     user_assets:    AccountInfo<'info>,
     vault_assets:   AccountInfo<'info>,
@@ -138,6 +137,7 @@ pub fn cpi_deposit<'info>(
 //
 // Same account order as deposit, user is signer.
 
+#[allow(clippy::too_many_arguments)]
 pub fn cpi_redeem<'info>(
     vault:          AccountInfo<'info>,
     user_assets:    AccountInfo<'info>,
