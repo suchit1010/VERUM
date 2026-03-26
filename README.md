@@ -14,9 +14,9 @@
 
 Every stablecoin today is either a liability of one government (USDC, USDT), an experiment waiting to collapse (algorithmic), or a single-asset hedge that does not function as money (PAXG). When the dollar is weaponized through sanctions, when a central bank prints to fund a war, when one country's monetary policy exports inflation to every other country — there is no neutral alternative.
 
-**BASKET is that neutral alternative.**
+**VERUM is that neutral alternative.**
 
-It is a fully on-chain stablecoin whose value is pegged to a dynamic basket of the exact assets global trade revolves around: crude oil, gold, silver, agricultural commodities, Bitcoin as a digital hedge, and tokenized real-world assets. No single government controls it. No single asset can break it. The collateral ratio automatically tightens when markets become volatile, so the peg holds exactly when it matters most — in a crisis.
+It is a fully on-chain stablecoin whose value is pegged to a dynamic VERUM of the exact assets global trade revolves around: crude oil, gold, silver, agricultural commodities, Bitcoin as a digital hedge, and tokenized real-world assets. No single government controls it. No single asset can break it. The collateral ratio automatically tightens when markets become volatile, so the peg holds exactly when it matters most — in a crisis.
 
 This is not another yield farm. This is the reserve currency the world has needed since Bretton Woods failed.
 
@@ -24,11 +24,11 @@ This is not another yield farm. This is the reserve currency the world has neede
 
 ## The Problem We Are Solving
 
-| Problem | Current State | BASKET Solution |
+| Problem | Current State | VERUM Solution |
 |---------|--------------|-----------------|
 | USD dominance is weaponized | Sanctions freeze reserves overnight | Neutral, decentralized, no single issuer |
 | Stablecoins fail in crises | Terra/UST lost $40B in 72h | Adaptive CR auto-escalates to 300% in stress |
-| Single-asset backing | PAXG = gold only, misses energy | Multi-asset basket mirrors real trade flows |
+| Single-asset backing | PAXG = gold only, misses energy | Multi-asset VERUM mirrors real trade flows |
 | Fiat-backed means fiat inflation | USDC tracks USD debasement | Backed by scarce real-world commodities |
 | Oracle manipulation | Single source = single attack vector | Pyth + Switchboard median + spread check |
 | Opaque collateral | Can't verify backing in real time | Fully on-chain, readable 24/7 by anyone |
@@ -41,13 +41,13 @@ This is not another yield farm. This is the reserve currency the world has neede
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                          BASKET Protocol Stack                               │
+│                          VERUM Protocol Stack                               │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  LAYER 4 — CROSS-CHAIN (post-MVP)                                            │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
 │  │  Chainlink CCIP → BRICS CBDC bridge → mBridge / e-CNY / Digital INR  │   │
-│  │  Oil & commodity trades settle in BASKET across chains                │   │
+│  │  Oil & commodity trades settle in VERUM across chains                │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                              │
 │  LAYER 3 — DATA & ORACLES                                                    │
@@ -63,13 +63,13 @@ This is not another yield farm. This is the reserve currency the world has neede
 │                                ▼                                            │
 │             Oracle Aggregator: median(valid_prices) + spread_check          │
 │                                                                              │
-│  LAYER 2 — BASKET VAULT (this repo — Layer 2 logic)                         │
+│  LAYER 2 — VERUM VAULT (this repo — Layer 2 logic)                         │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │  BasketVault Anchor Program                                          │   │
+│  │  VERUMVault Anchor Program                                          │   │
 │  │                                                                      │   │
 │  │  initialize()          → one-time setup, PDA becomes mint authority  │   │
-│  │  mint_basket()         → prices → CR gate → SSS CPI mint             │   │
-│  │  redeem_basket()       → burn BASKET → SVS-1 redeem CPIs             │   │
+│  │  mint_VERUM()         → prices → CR gate → SSS CPI mint             │   │
+│  │  redeem_VERUM()       → burn VERUM → SVS-1 redeem CPIs             │   │
 │  │  rebalance_weights()   → validate + apply Chainlink Functions result  │   │
 │  │  set_emergency_mode()  → pause mints, withdrawals always stay open    │   │
 │  └────────────────────────┬────────────────────────┬─────────────────────┘  │
@@ -84,7 +84,7 @@ This is not another yield farm. This is the reserve currency the world has neede
 │  │  burn_tokens(amount)     │   │  ┌──────────┐  ┌──────────┐         │   │
 │  │  freeze / thaw           │   │  │PAXG Vault│  │tOIL Vault│  ...    │   │
 │  │                          │   │  └──────────┘  └──────────┘         │   │
-│  │  BASKET token lives here │   │  ┌──────────┐  ┌──────────┐         │   │
+│  │  VERUM token lives here │   │  ┌──────────┐  ┌──────────┐         │   │
 │  │  Vault PDA = mint auth   │   │  │WBTC Vault│  │XAG Vault │  ...    │   │
 │  └──────────────────────────┘   │  └──────────┘  └──────────┘         │   │
 │                                 │                                      │   │
@@ -109,22 +109,22 @@ User wallet
     │     SVS-1 mints share tokens to user (ERC-4626 shares)
     │     SVS-1 handles: rounding, slippage check, inflation protection
     │
-    └── STEP 2: Mint BASKET
-          User calls BasketVault::mint_basket(desired_amount)
+    └── STEP 2: Mint VERUM
+          User calls VERUMVault::mint_VERUM(desired_amount)
 
-          BasketVault:
+          VERUMVault:
           ├─ Reads total_assets from each SVS-1 vault (direct account read)
           ├─ Fetches Pyth PriceUpdateV2 for all 6 assets (remaining_accounts)
           ├─ Tries Switchboard fallback per asset if Pyth stale
           ├─ Computes median per asset, validates spread < 1.5%
-          ├─ basket_value = Σ( normalize(amount[i]) × price[i] × weight_bps[i] / 10000 )
+          ├─ VERUM_value = Σ( normalize(amount[i]) × price[i] × weight_bps[i] / 10000 )
           ├─ btc_conf_bps = btc_conf / btc_price × 10000  ← vol proxy
           ├─ adaptive_cr  = 150 | 200 | 300  based on btc_conf_bps
-          ├─ REQUIRE: basket_value >= desired × adaptive_cr / 100
+          ├─ REQUIRE: VERUM_value >= desired × adaptive_cr / 100
           ├─ Deducts 0.1% to insurance fund
           └─ CPI → SSS::mint_tokens(net_amount)
 
-          User receives BASKET tokens
+          User receives VERUM tokens
 ```
 
 ### Redeem Flow
@@ -132,12 +132,12 @@ User wallet
 ```
 User wallet
     │
-    └── Calls BasketVault::redeem_basket(basket_amount)
+    └── Calls VERUMVault::redeem_VERUM(VERUM_amount)
 
-        BasketVault:
-        ├─ CPI → SSS::burn_tokens(basket_amount)
+        VERUMVault:
+        ├─ CPI → SSS::burn_tokens(VERUM_amount)
         ├─ For each of 6 assets:
-        │   pro_rata_shares = user_share_balance × basket_amount / total_supply
+        │   pro_rata_shares = user_share_balance × VERUM_amount / total_supply
         │   CPI → SVS-1::redeem(pro_rata_shares, min_assets_out)
         └─ User receives proportional collateral in all 6 assets
 ```
@@ -146,16 +146,16 @@ User wallet
 
 ## Current Deployment Status (Devnet)
 
-As of March 20, 2026, BASKET is deployed and operational on Solana Devnet:
+As of March 20, 2026, VERUM is deployed and operational on Solana Devnet:
 
 ### Programs Deployed
 - **SSS Stablecoin SDK**: `HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet` ([Solscan](https://solscan.io/account/HJ6TUXQ34XhDrmvcozMsBWhSuEVkEcYeqoTWo1Bcmzet?cluster=devnet))
 - **SSS Transfer Hook**: `6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN` ([Solscan](https://solscan.io/account/6x8XMLoA9FFmVJnaDou9tyKrh9CFynDY7TtKJ54p4dcN?cluster=devnet))
 - **SVS-1 Vault Standard**: `Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC` ([Solscan](https://solscan.io/account/Bv8aVSQ3DJUe3B7TqQZRZgrNvVTh8TjfpwpoeR1ckDMC?cluster=devnet))
-- **BasketVault**: `BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP` ([Solscan](https://solscan.io/account/BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP?cluster=devnet))
+- **VERUMVault**: `BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP` ([Solscan](https://solscan.io/account/BCjkqk3PNXuGVnWSpEgWU8m7ewEAQEb4REFPFgxdnHBP?cluster=devnet))
 
 ### Tokens Minted
-- **BASKET**: `B2mN75XtCtTAduTnQe1jTTH2NE9usavMVMPACZbf2s1q` (6 decimals, supply: 0)
+- **VERUM**: `B2mN75XtCtTAduTnQe1jTTH2NE9usavMVMPACZbf2s1q` (6 decimals, supply: 0)
 
 ### Protocol State
 - **GlobalConfig PDA**: `9YjD3CT7Fd8E9dFbtx7TDWESsV6BMtURJr4oBXwQskPo`
@@ -178,7 +178,7 @@ As of March 20, 2026, BASKET is deployed and operational on Solana Devnet:
 
 ---
 
-## Basket Composition
+## VERUM Composition
 
 Initial weights mirror 2026 global trade flows. Rebalanced quarterly via Chainlink Functions.
 
@@ -262,7 +262,7 @@ Quarterly rebalancing (Chainlink Functions):
 
 ## Mathematical Specification
 
-### Basket Value Calculation
+### VERUM Value Calculation
 
 ```
 normalize(amount, decimals):
@@ -270,7 +270,7 @@ normalize(amount, decimals):
   if decimals < 6: amount × 10^(6 - decimals)
   if decimals = 6: amount
 
-basket_value = Σᵢ [
+VERUM_value = Σᵢ [
     normalize(collateral_amount[i], asset.decimals)
   × normalize_price(pyth_price[i], pyth_expo[i])       ← to 6 dec
   / 1_000_000
@@ -282,7 +282,7 @@ basket_value = Σᵢ [
 ### Collateral Ratio
 
 ```
-CR (%) = basket_value / basket_minted × 100
+CR (%) = VERUM_value / VERUM_minted × 100
 ```
 
 ### Mint Gate
@@ -290,8 +290,8 @@ CR (%) = basket_value / basket_minted × 100
 ```
 total_after  = current_supply + desired_amount
 required     = total_after × adaptive_CR / 100
-PASS if basket_value ≥ required
-FAIL if basket_value <  required  →  error: UnderCollateralized
+PASS if VERUM_value ≥ required
+FAIL if VERUM_value <  required  →  error: UnderCollateralized
 ```
 
 ### Adaptive CR
@@ -323,15 +323,15 @@ require spread_bps ≤ 150          ← reject if sources disagree
 
 ## Crisis Resilience Analysis
 
-| Scenario | What Happens | Why BASKET Survives |
+| Scenario | What Happens | Why VERUM Survives |
 |----------|-------------|---------------------|
 | 2008-style liquidity crunch | BTC vol spikes → conf/price > 2% | CR auto-escalates to 300%. New mints require 3× collateral. No under-collateralization possible. |
-| Oil embargo / supply shock | WTI price surges | Oil is 25% of basket → BASKET value rises with oil. Protocol gets stronger, not weaker. |
-| Central bank gold buying surge | XAU price rises | Gold is 20% of basket → same positive effect. Chainlink job increases gold weight next quarter. |
+| Oil embargo / supply shock | WTI price surges | Oil is 25% of VERUM → VERUM value rises with oil. Protocol gets stronger, not weaker. |
+| Central bank gold buying surge | XAU price rises | Gold is 20% of VERUM → same positive effect. Chainlink job increases gold weight next quarter. |
 | Oracle manipulation attempt | Attacker tries to spoof one feed | Median aggregation requires moving ALL valid sources. Spread check rejects >1.5% disagreement. |
 | Solana network partition | Pyth feeds go stale | Switchboard (separate infra) takes over. CR defaults to Elevated (200%) during outage. |
 | Both oracles fail | Zero valid prices | InsufficientOracleSources error. Mints pause. Existing positions redeemable. |
-| Terra/UST-style death spiral | Panic selling BASKET | BASKET is over-collateralized. No algorithmic backing. Redeem always returns real collateral. |
+| Terra/UST-style death spiral | Panic selling VERUM | VERUM is over-collateralized. No algorithmic backing. Redeem always returns real collateral. |
 | Protocol contract bug | Discovery of exploit | Emergency mode pauses mints in <1 block. Withdrawals always stay open — user funds never locked. |
 
 ---
@@ -390,23 +390,23 @@ Layer 7  — Checked arithmetic everywhere
 ## Project Structure
 
 ```
-basket-protocol/
+VERUM-protocol/
 │
 ├── programs/
-│   └── basket-vault/
+│   └── VERUM-vault/
 │       └── src/
 │           ├── lib.rs                    ← program entry point, all instructions
 │           ├── state.rs                  ← GlobalConfig, AssetConfig, seeds, feed IDs
 │           ├── errors.rs                 ← 25 VaultError codes
-│           ├── oracle.rs                 ← Pyth normalization, adaptive CR, basket math
+│           ├── oracle.rs                 ← Pyth normalization, adaptive CR, VERUM math
 │           ├── oracle_aggregator.rs      ← multi-source median + spread check
 │           ├── svs_interface.rs          ← CPI to SVS-1 vaults (deposit/redeem)
 │           ├── sss_interface.rs          ← CPI to SSS (mint/burn)
 │           └── instructions/
 │               ├── mod.rs
 │               ├── initialize.rs         ← one-time setup, mint authority transfer
-│               ├── mint_basket.rs        ← oracle → CR gate → SSS CPI mint
-│               ├── redeem_basket.rs      ← burn BASKET → SVS-1 redeem CPIs
+│               ├── mint_VERUM.rs        ← oracle → CR gate → SSS CPI mint
+│               ├── redeem_VERUM.rs      ← burn VERUM → SVS-1 redeem CPIs
 │               ├── rebalance_weights.rs  ← quarterly weight update from Chainlink
 │               └── emergency.rs         ← pause/unpause mints
 │
@@ -422,13 +422,13 @@ basket-protocol/
 │       │   └── useProtocolState.ts       ← reads on-chain GlobalConfig
 │       └── utils/
 │           ├── constants.ts              ← program IDs, feed IDs, vault addresses
-│           └── basket-sdk.ts             ← PDA helpers, SVS-1 deposit, BASKET mint/redeem
+│           └── VERUM-sdk.ts             ← PDA helpers, SVS-1 deposit, VERUM mint/redeem
 │
 ├── tests/
-│   └── basket-vault.ts                   ← 6 integration tests
+│   └── VERUM-vault.ts                   ← 6 integration tests
 │
 ├── scripts/
-│   ├── deploy.ts                         ← initialize BasketVault protocol on devnet
+│   ├── deploy.ts                         ← initialize VERUMVault protocol on devnet
 │   └── init-vaults.ts                    ← create SVS-1 vault for each collateral asset
 │
 ├── chainlink-functions/
@@ -452,8 +452,8 @@ basket-protocol/
 
 This project reuses the following open-source components as Layer 1 dependencies:
 
-- **SSS Stablecoin SDK** (suchit1010/solana-stablecoin-standard, branch: submission/final-hardening-20260314): Used for the BASKET token minting and burning logic. The BasketVault program performs CPI calls to SSS for token operations.
-- **SVS-1 Vault Standard** (solanabr/solana-vault-standard, branch: main): Used for collateral vault management. The BasketVault program performs CPI calls to SVS-1 for deposit and redeem operations on each of the 6 collateral assets.
+- **SSS Stablecoin SDK** (suchit1010/solana-stablecoin-standard, branch: submission/final-hardening-20260314): Used for the VERUM token minting and burning logic. The VERUMVault program performs CPI calls to SSS for token operations.
+- **SVS-1 Vault Standard** (solanabr/solana-vault-standard, branch: main): Used for collateral vault management. The VERUMVault program performs CPI calls to SVS-1 for deposit and redeem operations on each of the 6 collateral assets.
 
 These are cloned into the `deps/` directory and deployed as separate programs on devnet. No modifications were made to the original codebases.
 
@@ -461,7 +461,7 @@ These are cloned into the `deps/` directory and deployed as separate programs on
 
 ## Launch Plan and Trading Volume Target
 
-The BASKET token has been launched on DeAura. To reach the $200,000 trading volume requirement:
+The VERUM token has been launched on DeAura. To reach the $200,000 trading volume requirement:
 
 - **Immediate Actions**: List on Jupiter DEX aggregator and Orca liquidity pool within 48 hours of judging announcement.
 - **Liquidity Provision**: Allocate 10% of initial supply ($20,000 worth) to provide initial liquidity on Orca.
@@ -511,7 +511,7 @@ npm install
 cd deps/sss && npm install && anchor build && cd ../..
 cd deps/svs && npm install && anchor build && cd ../..
 
-# 4. Build BasketVault
+# 4. Build VERUMVault
 anchor build
 ```
 
@@ -523,7 +523,7 @@ solana config set --url devnet
 solana airdrop 5
 
 # Create test mints (one per collateral)
-spl-token create-token --decimals 6   # BASKET
+spl-token create-token --decimals 6   # VERUM
 spl-token create-token --decimals 8   # PAXG (gold)
 spl-token create-token --decimals 6   # tOIL (crude oil)
 spl-token create-token --decimals 8   # WBTC
@@ -533,7 +533,7 @@ spl-token create-token --decimals 8   # WBTC
 cd deps/sss && anchor deploy --provider.cluster devnet && cd ../..
 cd deps/svs && anchor deploy --provider.cluster devnet && cd ../..
 
-# Deploy BasketVault
+# Deploy VERUMVault
 anchor deploy --provider.cluster devnet
 
 # Update program IDs in app/src/utils/constants.ts
@@ -561,7 +561,7 @@ npm install
 npm run dev
 # → Open http://localhost:5173
 # → Connect Phantom on devnet
-# → Deposit test collateral → Mint BASKET → Redeem
+# → Deposit test collateral → Mint VERUM → Redeem
 ```
 
 **For the complete step-by-step guide including discriminator verification and test token minting, see `SETUP.md`.**
@@ -573,10 +573,10 @@ npm run dev
 | Phase | When | Rebalancing Authority | Weight Determination |
 |-------|------|-----------------------|---------------------|
 | Phase 1 (MVP) | Now | 3-of-5 multisig | Multisig submits Chainlink Functions output on-chain |
-| Phase 2 | 3 months post-launch | BASKET governance DAO | Token-weighted quadratic voting on proposals |
+| Phase 2 | 3 months post-launch | VERUM governance DAO | Token-weighted quadratic voting on proposals |
 | Phase 3 | 6 months | Chainlink DON (automated) | Fully automated — no human involvement for routine rebalances |
 
-The maximum shift constraint (±5% per quarter, enforced in Rust) means even a fully compromised governance actor cannot dump the basket composition in a single transaction.
+The maximum shift constraint (±5% per quarter, enforced in Rust) means even a fully compromised governance actor cannot dump the VERUM composition in a single transaction.
 
 ---
 
@@ -588,7 +588,7 @@ Month 2   →  Mainnet collateral integrations:
               PAXG (Paxos), WBTC (Portal), tokenized oil (Ostium/Parcl)
 Month 3   →  Governance token launch, Phase 2 DAO rebalancing
 Month 4   →  Jupiter + Orca DEX liquidity pools
-Month 6   →  Chainlink CCIP → BASKET on Ethereum
+Month 6   →  Chainlink CCIP → VERUM on Ethereum
 Month 9   →  SVS-2 confidential vaults → institutional reserve product
 Month 12  →  BRICS payment rail pilot
 Month 24  →  Central bank reserve discussions
@@ -620,12 +620,12 @@ This is a hackathon MVP. Do not use on mainnet with real funds before a professi
 
 Per Buildifi Hack 2 competition rules, all reused code is disclosed here.
 
-| Component | Source Repo | License | Usage in BASKET |
+| Component | Source Repo | License | Usage in VERUM |
 |-----------|-------------|---------|----------------|
-| SSS Stablecoin SDK | [suchit1010/solana-stablecoin-standard](https://github.com/suchit1010/solana-stablecoin-standard) branch: `submission/final-hardening-20260314` | MIT | BASKET token mint/burn engine. `BasketVault` CPIs into SSS for `mint_tokens` and `burn_tokens`. SSS code is completely unchanged. |
-| SVS-1 Vault Standard | [solanabr/solana-vault-standard](https://github.com/solanabr/solana-vault-standard) branch: `main` | MIT | ERC-4626 tokenized collateral vaults, one per asset. `BasketVault` CPIs into SVS-1 for collateral deposit and redemption. SVS-1 code is completely unchanged. |
+| SSS Stablecoin SDK | [suchit1010/solana-stablecoin-standard](https://github.com/suchit1010/solana-stablecoin-standard) branch: `submission/final-hardening-20260314` | MIT | VERUM token mint/burn engine. `VERUMVault` CPIs into SSS for `mint_tokens` and `burn_tokens`. SSS code is completely unchanged. |
+| SVS-1 Vault Standard | [solanabr/solana-vault-standard](https://github.com/solanabr/solana-vault-standard) branch: `main` | MIT | ERC-4626 tokenized collateral vaults, one per asset. `VERUMVault` CPIs into SVS-1 for collateral deposit and redemption. SVS-1 code is completely unchanged. |
 
-All other code — `BasketVault` program, oracle aggregator, adaptive CR logic, `svs_interface.rs`, `sss_interface.rs`, frontend, scripts, Chainlink Functions job — is original work written for this hackathon.
+All other code — `VERUMVault` program, oracle aggregator, adaptive CR logic, `svs_interface.rs`, `sss_interface.rs`, frontend, scripts, Chainlink Functions job — is original work written for this hackathon.
 
 ---
 
@@ -677,12 +677,12 @@ All other code — `BasketVault` program, oracle aggregator, adaptive CR logic, 
 
 ## Evaluation Criteria Alignment
 
-| Criterion | BASKET Approach |
+| Criterion | VERUM Approach |
 |-----------|----------------|
 | **Technical Quality** | Production Anchor patterns. Checked arithmetic everywhere. Multi-oracle with fallback. PDA signer model for CPI. SVS-1 and SSS are production-hardened dependencies. |
-| **Token Utility** | BASKET is the settlement unit. Minting requires real over-collateralized assets. Redeeming returns real assets. 0.1% fee funds insurance. Governance potential in Phase 2. |
+| **Token Utility** | VERUM is the settlement unit. Minting requires real over-collateralized assets. Redeeming returns real assets. 0.1% fee funds insurance. Governance potential in Phase 2. |
 | **Product Experience** | Live CR gauge with adaptive regime display. Real-time Pyth price ticker. Deposit → Mint → Redeem in 3 tabs. Oracle status. BTC vol proxy gauge. |
-| **Innovation** | Adaptive CR using BTC Pyth confidence interval (first on Solana). Multi-asset basket with on-chain dynamic weights. Two-layer architecture (SVS-1 + SSS) enables composability. |
+| **Innovation** | Adaptive CR using BTC Pyth confidence interval (first on Solana). Multi-asset VERUM with on-chain dynamic weights. Two-layer architecture (SVS-1 + SSS) enables composability. |
 | **Launch Readiness** | DeAura token created. $200k volume target via Jupiter/Orca listing plan. Complete whitepaper. Demo video. Deploy scripts ready. |
 
 ---
